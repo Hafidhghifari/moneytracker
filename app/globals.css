@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
   --background: #f3f6fa;
@@ -17,9 +17,24 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  color: var(--foreground);
 }
 
 * { box-sizing: border-box; }
@@ -33,10 +48,13 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   font-size: 15px;
   line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid #8eadd7; outline-offset: 3px; }
+.tnum { font-variant-numeric: tabular-nums; }
 
 .auth-page {
   display: grid;
@@ -118,6 +136,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .dashboard-gate-actions { display: flex; gap: 12px; }
 .dashboard-gate-actions a, .dashboard-gate-actions button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 10px; padding: 0 15px; background: white; color: var(--foreground); cursor: pointer; text-decoration: none; }
 .dashboard-gate-actions a { border-color: var(--primary); background: var(--primary); color: white; }
+.settings-card { width: min(100%, 560px); border: 1px solid var(--border); border-radius: 16px; padding: 32px; background: var(--surface); }
+.settings-card h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.04em; }
+.settings-intro { margin: 0 0 24px; color: var(--muted-foreground); }
+.preference-field { display: grid; gap: 8px; margin: 24px 0; }
+.preference-field label { color: #34424e; font-size: 13px; font-weight: 600; }
+.preference-field select { min-height: 46px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: white; color: var(--foreground); }
+.preference-field select:focus-visible { border-color: var(--primary); }
+.preference-field select:disabled { cursor: wait; opacity: .7; }
+.preference-message { min-height: 20px; margin: 0; color: var(--muted-foreground); font-size: 12px; }
 
 @media (max-width: 850px) {
   .auth-page { grid-template-columns: 1fr; padding: 12px; gap: 0; }
@@ -131,6 +158,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .auth-legal { margin-top: 30px; }
   .dashboard-gate-content { gap: 12px; }
   .dashboard-gate-card { padding: 24px; }
+  .settings-card { padding: 24px; }
 }
 @media (max-width: 420px) {
   .auth-page { padding: 0; }

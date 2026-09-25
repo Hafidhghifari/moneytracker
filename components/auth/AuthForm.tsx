@@ -26,20 +26,36 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     if (isRegister) payload.name = String(form.get("name") ?? "").trim();
 
     try {
-      const response = await fetch(`/api/auth/${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = (await response.json()) as { message?: string };
+      let response: Response;
+      try {
+        response = await fetch(`/api/auth/${mode}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch {
+        setMessage("Tidak dapat menjangkau server. Pastikan aplikasi berjalan, lalu coba lagi.");
+        return;
+      }
+
+      let result: { message?: string } | null = null;
+      try {
+        result = (await response.json()) as { message?: string };
+      } catch {
+        // The server may return an HTML error page instead of JSON.
+      }
       if (!response.ok) {
-        setMessage(result.message ?? "Terjadi kendala. Silakan coba lagi.");
+        setMessage(result?.message ?? `Server mengalami kendala (HTTP ${response.status}). Coba lagi sebentar.`);
+        return;
+      }
+      if (!result) {
+        setMessage("Server memberi respons yang tidak dikenali. Coba lagi.");
         return;
       }
       router.replace("/dashboard");
       router.refresh();
     } catch {
-      setMessage("Tidak dapat terhubung. Periksa koneksi lalu coba lagi.");
+      setMessage("Terjadi kendala saat memproses permintaan. Coba lagi.");
     } finally {
       setPending(false);
     }

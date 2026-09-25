@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { MoneyCatMascot } from "@/components/brand/MoneyCatMascot";
 import "./globals.css";
@@ -14,17 +15,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Moneyhist — Keuangan Pribadi",
-  description: "Catat pemasukan dan pengeluaran dengan lebih mudah.",
+  title: {
+    default: "Moneyhist",
+    template: "%s · Moneyhist",
+  },
+  description:
+    "Moneyhist membantu mahasiswa mencatat pemasukan dan pengeluaran serta memantau kondisi keuangan.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-dvh flex-col">
         {children}
         <MoneyCatMascot />
       </body>

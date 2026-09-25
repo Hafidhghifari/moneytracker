@@ -19,6 +19,7 @@ model User {
   email        String        @unique
   password     String
   preference   String?
+  sessionVersion Int          @default(0) @map("session_version")
   transactions Transaction[]
 
   @@map("users")
