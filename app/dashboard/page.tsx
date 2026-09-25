@@ -20,6 +20,7 @@ export default async function DashboardPage() {
             <p>Kamu berhasil masuk. Ringkasan transaksi akan muncul di sini setelah fitur transaksi tersedia.</p>
             <div className="dashboard-gate-actions">
               <Link href="/dashboard">Dashboard</Link>
+              <Link href="/settings">Pengaturan</Link>
               <LogoutButton />
             </div>
           </div>
