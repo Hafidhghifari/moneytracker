@@ -5,7 +5,7 @@ Dokumen ini menetapkan baseline antarmuka Moneyhist, aplikasi web pencatat keuan
 ## Arah visual
 
 - **Karakter:** bersih, ramah, tenang, dan praktis. Keuangan harus terasa mudah dipahami, bukan seperti terminal akuntansi.
-- **Tema awal:** light. Gunakan bidang netral dingin, permukaan putih, teks gelap, dan satu aksen biru kehijauan untuk aksi utama.
+- **Tema awal:** light. Gunakan latar biru-abu pucat, permukaan putih, teks gelap, dan aksen biru yang tenang. Hijau hanya dipakai seperlunya untuk menandai pemasukan atau hasil positif.
 - **Kepadatan:** rendah sampai sedang. Prioritaskan saldo, ringkasan, dan transaksi terbaru; hindari dashboard yang penuh widget.
 - **Prinsip:** hierarki jelas, angka mudah dibandingkan, warna status konsisten, dan tidak mengandalkan warna saja untuk menyampaikan arti.
 
@@ -66,16 +66,31 @@ Nilai berikut adalah token awal. Pertahankan rasio kontras WCAG AA untuk teks da
 | `--foreground` | `#17212B` | Teks utama |
 | `--muted-foreground` | `#667482` | Keterangan sekunder |
 | `--border` | `#DFE6ED` | Garis batas dan divider |
-| `--primary` | `#277C78` | Tombol utama, fokus, tautan aktif |
+| `--primary` | `#4C78B8` | Tombol utama, fokus, tautan aktif |
 | `--primary-foreground` | `#FFFFFF` | Teks di atas warna utama |
-| `--income` | `#247A59` | Pemasukan dan keadaan positif |
+| `--income` | `#2F8A68` | Pemasukan dan keadaan positif; gunakan terbatas pada label/indikator |
 | `--expense` | `#B84B55` | Pengeluaran dan kesalahan |
 | `--warning` | `#A66A16` | Peringatan yang memerlukan perhatian |
 | `--info` | `#3C6F9C` | Informasi netral |
 
-Warna pemasukan/pengeluaran adalah warna semantik, bukan aksen dekoratif. Sertakan label, ikon, atau tanda `+`/`−` agar makna tetap terbaca tanpa warna. Jangan memberi warna berbeda pada setiap kartu metrik hanya demi variasi.
+Warna pemasukan/pengeluaran adalah warna semantik, bukan aksen dekoratif. Hijau bukan warna utama aplikasi: jangan gunakan untuk latar besar, sidebar, hero, atau semua tombol. Sertakan label, ikon, atau tanda `+`/`−` agar makna tetap terbaca tanpa warna. Jangan memberi warna berbeda pada setiap kartu metrik hanya demi variasi.
 
 Contoh peta ke CSS: definisikan token pada `:root` di `app/globals.css`, lalu petakan token yang digunakan Tailwind lewat `@theme inline` bila utility class dibutuhkan. Tema gelap dapat ditambahkan kemudian melalui pasangan token semantik yang sama, bukan mengganti warna per komponen.
+
+## Halaman login dan register
+
+Halaman autentikasi memakai bahasa visual dashboard yang sama, tetapi dengan komposisi lebih fokus dan minim gangguan. Pertahankan latar biru-abu pucat, bidang form putih, radius lembut, border tipis, dan aksen biru. Jangan memakai bidang hijau besar atau gradien hijau.
+
+- Letakkan logo/nama Moneyhist di bagian atas kartu atau kolom form dengan ruang lega. Gunakan logo produk sendiri bila tersedia; jangan mengambil logo atau maskot dari gambar referensi.
+- Pada desktop, gunakan susunan dua kolom: sisi form yang cukup lebar dan area visual pendamping yang sederhana, misalnya blok warna biru pucat dengan ilustrasi produk opsional. Form tetap menjadi fokus. Hindari dekorasi atau teks promosi yang berlebihan.
+- Pada layar kecil, hilangkan area pendamping dan tampilkan form satu kolom dengan padding 20–24 px. Konten harus muat tanpa scroll horizontal.
+- Login berisi judul singkat, penjelasan opsional, field email dan password, kontrol tampil/sembunyikan password bila disediakan, tombol utama **Masuk**, lalu tautan ke register.
+- Register berisi nama, email, dan password sesuai SRS, tombol utama **Buat akun**, lalu tautan ke login. Jangan menambahkan field atau pilihan autentikasi yang belum didukung sistem.
+- Input memiliki label persisten, placeholder berupa contoh format bila perlu, tinggi 44–48 px, latar putih, border `--border`, dan fokus `--primary` yang jelas. Validasi diletakkan dekat field terkait.
+- Tombol submit menggunakan biru `--primary` dengan teks putih. Hijau tidak digunakan untuk tombol utama. Tautan sekunder memakai biru yang cukup kontras.
+- Kesalahan login/register harus spesifik dan mudah ditindaklanjuti tanpa membocorkan apakah kredensial sensitif tertentu terdaftar. Pertahankan isi field aman (misalnya email) ketika validasi gagal.
+- Saat submit, cegah pengiriman ganda dan tampilkan status proses pada tombol. Setelah berhasil, berikan konfirmasi atau arahkan ke halaman sesuai alur autentikasi.
+- Pastikan alur keyboard, fokus terlihat, label terkait dengan input, dan pesan status diumumkan dengan semantik yang sesuai.
 
 ## Sidebar dan topbar
 
@@ -166,4 +181,3 @@ Tampilkan tiga ringkasan yang diwajibkan: **Saldo**, **Total pemasukan**, dan **
 ## Di luar baseline
 
 Grafik analitik, notifikasi real-time, kategori kompleks, anggaran, ekspor, sinkronisasi bank, serta tema gelap bukan kebutuhan dalam SRS saat ini. Tambahkan hanya ketika requirement produk mendukungnya.
-
