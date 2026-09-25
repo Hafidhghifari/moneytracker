@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:up": "docker compose up -d --wait db",
     "db:down": "docker compose down",
+    "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:verify": "tsx scripts/verify-transactions.ts",
