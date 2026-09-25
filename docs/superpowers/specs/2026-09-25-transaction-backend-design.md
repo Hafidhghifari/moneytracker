@@ -128,14 +128,17 @@ membuat banyak instance).
 export async function getCurrentUserId(): Promise<number | null>
 ```
 
-Stub sementara: saat `NODE_ENV !== "production"` mengembalikan id user dev hasil
-seed; saat production mengembalikan `null`. Tujuannya agar Anggota 2 bisa
-mengembangkan dan memverifikasi alur penuh tanpa menunggu Anggota 1.
+Stub sementara: saat `NODE_ENV !== "production"`, stub mencari user seed
+**berdasarkan email** (mis. `user.a@example.com`) lalu mengembalikan `id`-nya —
+bukan hardcode `1`, karena id autoincrement bergantung urutan seed. Saat production
+mengembalikan `null`. Tujuannya agar Anggota 2 bisa mengembangkan dan memverifikasi
+alur penuh tanpa menunggu Anggota 1.
 
 ### 5.3 `lib/transactions/schema.ts`
 
 ```ts
-export type TransactionType = "income" | "expense";
+import { TransactionType } from "@/lib/generated/prisma/client"; // satu-satunya sumber nilai enum
+
 export type TransactionFilter = "all" | "income" | "expense";
 
 export type TransactionInput = {
@@ -146,7 +149,12 @@ export type TransactionInput = {
 };
 
 export const transactionInputSchema = /* zod, lihat Bagian 7 */
+export const deleteTransactionSchema = /* zod, lihat Bagian 7 */
+export const transactionFilterSchema = /* zod, lihat Bagian 7 */
 ```
+
+`TransactionType` **tidak** dideklarasikan ulang secara manual — diimpor dari Prisma
+Client yang digenerate agar tidak ada dua sumber kebenaran yang bisa drift.
 
 ### 5.4 `lib/transactions/data.ts` — data-access murni
 
@@ -180,6 +188,13 @@ deleteTransaction(userId: number, transactionId: number): Promise<boolean>  // f
    Tujuannya: DTO aman di-pass ke client component (Decimal.js bukan plain object)
    dan UI tidak terkena masalah timezone.
 5. Semua pembacaan memakai `where: { userId }` tanpa kecuali.
+6. Setiap fungsi diawali guard: `userId` harus integer positif
+   (`Number.isInteger(userId) && userId > 0`), jika tidak → throw. Ini pertahanan
+   berlapis: di Prisma, `userId: undefined` menghapus kondisi filter sehingga query
+   bisa berubah menjadi tidak ter-scope.
+7. Konversi `transactionDate` `"YYYY-MM-DD"` → `new Date(\`${s}T00:00:00.000Z\`)`
+   dilakukan di sini (satu tempat), setelah schema memvalidasi format dan
+   keberadaan tanggal kalender.
 
 ### 5.5 `lib/transactions/actions.ts` — Server Action
 
@@ -188,7 +203,7 @@ deleteTransaction(userId: number, transactionId: number): Promise<boolean>  // f
 
 export type ActionState =
   | { status: "success"; message: string }
-  | { status: "error"; message: string; fieldErrors?: Record<string, string[]> };
+  | { status: "error"; message: string; fieldErrors?: Partial<Record<string, string[]>> };
 
 export async function addTransactionAction(
   prevState: ActionState,
@@ -203,15 +218,26 @@ export async function deleteTransactionAction(
 
 **Alur setiap action (urutan wajib):**
 
-1. `const userId = await getCurrentUserId()`; bila `null` → `redirect("/login")`.
+1. `const userId = await getCurrentUserId()`; bila `userId == null` (perbandingan
+   longgar, menangkap `null` **maupun** `undefined`) → `redirect("/login")`.
+   **`redirect()` harus dipanggil di luar blok try/catch**, karena `redirect()`
+   bekerja dengan melempar `NEXT_REDIRECT`; bila berada di dalam try/catch, redirect
+   akan tertelan dan berubah menjadi pesan error generik.
 2. Parse `FormData` (hanya field transaksi; **tidak pernah** membaca `userId` dari form).
-3. Validasi dengan `transactionInputSchema`; gagal → `{ status: "error", fieldErrors }`.
-4. Panggil fungsi `data.ts`.
-5. Sukses → `revalidatePath("/transactions")` dan `revalidatePath("/dashboard")`.
+3. Validasi: `addTransactionAction` memakai `transactionInputSchema`;
+   `deleteTransactionAction` memakai `deleteTransactionSchema` (id transaksi).
+   Gagal → `{ status: "error", message, fieldErrors }`.
+4. Panggil fungsi `data.ts` di dalam try/catch; error Prisma di-log server-side.
+5. Sukses → `revalidatePath(TRANSACTIONS_PATH)` dan `revalidatePath(DASHBOARD_PATH)`.
 6. Kembalikan `ActionState`.
 
-`revalidatePath("/dashboard")` disertakan agar dashboard Anggota 3 ikut ter-refresh
+`revalidatePath(DASHBOARD_PATH)` disertakan agar dashboard Anggota 3 ikut ter-refresh
 setelah mutasi tanpa komunikasi tambahan antar-anggota.
+
+`TRANSACTIONS_PATH = "/transactions"` dan `DASHBOARD_PATH = "/dashboard"` dinyatakan
+sebagai konstanta di `actions.ts`, dan harus disamakan dengan route final yang dipilih
+Anggota 3/4. `revalidatePath` ke route yang salah tidak melempar error — hanya tidak
+melakukan apa-apa — jadi kesepakatan route perlu eksplisit.
 
 ## 6. Otorisasi & Keamanan
 
@@ -223,6 +249,7 @@ Karena itu otorisasi diulang di dalam action.
 |---|---|
 | IDOR hapus transaksi user lain | `deleteMany({ where: { id, userId } })` — atomik, `count === 0` berarti gagal |
 | Memalsukan `userId` dari client | `userId` hanya berasal dari `getCurrentUserId()`, tidak pernah dari `FormData`/argumen |
+| `userId` bernilai `undefined` | Guard `userId == null` di action + guard integer positif di setiap fungsi `data.ts`; aktifkan `strictUndefinedChecks` Prisma bila tersedia |
 | Membaca data user lain | Semua query baca memakai `where: { userId }` |
 | Kebocoran info keberadaan data | Pesan delete generik: "Transaksi tidak ditemukan atau bukan milikmu" |
 | Race condition cek-lalu-hapus | Tidak ada query cek terpisah; hapus dan verifikasi kepemilikan dalam satu operasi |
@@ -247,15 +274,33 @@ export const transactionInputSchema = z.object({
   description: z.string().trim().min(1, "Deskripsi wajib diisi").max(255),
   transactionDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid"),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid")
+    .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Tanggal tidak valid"),
 });
+
+// Hapus: validasi id transaksi (dipakai deleteTransactionAction)
+export const deleteTransactionSchema = z.object({
+  transactionId: z.coerce.number().int().positive("Transaksi tidak valid"),
+});
+
+// Filter: dipakai saat membaca searchParams sebelum memanggil getTransactions
+export const transactionFilterSchema = z
+  .enum(["all", "income", "expense"])
+  .catch("all");
 ```
 
 - `amount` divalidasi sebagai string berdesimal maksimal 2 angka, lalu ditransform ke
   `number`. Ini menghindari galat floating-point yang muncul bila memakai
   `z.coerce.number().multipleOf(0.01)`.
-- Tanggal di-parse `new Date(\`${transactionDate}T00:00:00.000Z\`)` dan dicek dengan
-  `Number.isNaN(date.getTime())` sebelum dikirim ke Prisma.
+- `transactionDate` divalidasi dua tahap: format `YYYY-MM-DD` dan keberadaan tanggal
+  kalender (`.refine` + `Date.parse`), sehingga `2026-02-31` ditolak. Konversi
+  string → `Date` dilakukan di `data.ts` (satu tempat, lihat 5.4 aturan 7).
+- `transactionFilterSchema` **wajib** dipakai saat membaca `searchParams`
+  (`transactionFilterSchema.parse(searchParams.filter)`); tanpa ini
+  `?filter=<sembarang>` diteruskan ke filter enum Prisma dan menimbulkan error query.
+- `fieldErrors` bertipe `Partial<Record<string, string[]>>` karena
+  `zod.flatten().fieldErrors` menghasilkan nilai `string[] | undefined`; buang entri
+  `undefined` sebelum dikembalikan.
 - Pesan validasi berbahasa Indonesia karena UI berbahasa Indonesia.
 - Batas atas `9_999_999_999.99` mengikuti presisi `Decimal(12,2)`.
 
@@ -298,7 +343,9 @@ Script keluar dengan exit code non-zero bila ada assert yang gagal.
 | `lib/transactions/actions.ts` | Server Action |
 | `prisma/seed.ts` | Seed 2 user + transaksi |
 | `scripts/verify-transactions.ts` | Script verifikasi acceptance criteria |
-| `.gitignore` | Tambah `.env` dan `lib/generated/prisma` |
+| `.gitignore` | Tambah `lib/generated/prisma` dan `!.env.example`. File `.gitignore` yang ada sudah memuat `.env*`, sehingga `.env.example` **wajib** di-whitelist agar ikut ter-commit |
+| `tsconfig.json` | Tambah `lib/generated/prisma` ke `exclude` agar folder generated tidak ikut type-check (`include` sudah memuat `**/*.ts`) |
+| `eslint.config.mjs` | Tambah `lib/generated/prisma` ke `ignores` |
 
 **Script `package.json`:** `db:up`, `db:down`, `db:migrate`, `db:seed`, `db:verify`, `db:studio`.
 
@@ -312,7 +359,7 @@ Script keluar dengan exit code non-zero bila ada assert yang gagal.
 | 1 (Auth) | Isi body `getCurrentUserId()`; jangan ubah signature. Bila butuh tabel Session, buat migrasi terpisah. | `lib/auth.ts` |
 | 2 (Backend) | Membuat schema, data-access, actions, seed, verify. | Semua file pada Bagian 9 |
 | 3 (Dashboard) | Import `getSummary` + `getRecentTransactions`; panggil `getCurrentUserId()` di page dan redirect bila null. | `lib/transactions/data.ts` |
-| 4 (UI Transaksi) | Pakai `addTransactionAction` / `deleteTransactionAction` dengan `useActionState`; filter dari `searchParams` → `getTransactions(userId, filter)`. | `lib/transactions/actions.ts` |
+| 4 (UI Transaksi) | Pakai `addTransactionAction` / `deleteTransactionAction` dengan `useActionState`; validasi filter dari `searchParams` dengan `transactionFilterSchema` lalu panggil `getTransactions(userId, filter)`. | `lib/transactions/actions.ts`, `lib/transactions/schema.ts` |
 
 **Langkah pertama implementasi:** `pnpm install`, jalankan `next dev` sekali agar
 `node_modules/next/dist/docs/` tergenerate, lalu baca panduan Server Actions versi
@@ -327,7 +374,7 @@ Next.js ini (wajib menurut `AGENTS.md`) sebelum menulis kode.
 | User A tidak dapat menghapus transaksi User B | `deleteMany({ where: { id, userId } })` |
 | User dapat menambahkan transaksi | `addTransactionAction` + `createTransaction` |
 | User dapat menghapus transaksi | `deleteTransactionAction` + `deleteTransaction` |
-| User dapat memfilter transaksi | `getTransactions(userId, filter)` |
+| User dapat memfilter transaksi | `getTransactions(userId, filter)` + `transactionFilterSchema` memvalidasi `searchParams` sebelum query |
 | Saldo dapat dihitung | `getSummary` (BR-06) |
 | Total pemasukan/pengeluaran tampil | `getSummary` disediakan untuk Anggota 3 |
 
@@ -345,6 +392,13 @@ Next.js ini (wajib menurut `AGENTS.md`) sebelum menulis kode.
    dikembalikan Prisma Client saat runtime (dikonversi di boundary `data.ts`).
 5. **Timezone `@db.Date`**: pastikan `new Date(\`${d}T00:00:00.000Z\`)` tidak
    menghasilkan pergeseran hari saat dibaca ulang.
+6. **`strictUndefinedChecks`**: cek apakah tersedia di Prisma versi ter-install; bila
+   ya, aktifkan agar `undefined` pada `where` tidak menghapus kondisi filter.
+7. **Sumber enum**: pastikan bentuk export `TransactionType` dari Prisma Client versi
+   ini bisa dipakai langsung oleh zod (`z.enum(...)`); bila tidak, sesuaikan cara
+   impornya tanpa mendeklarasikan ulang nilainya secara manual.
+8. **Route final**: `TRANSACTIONS_PATH` dan `DASHBOARD_PATH` harus disepakati dengan
+   Anggota 3/4 sebelum implementasi.
 
 ## 13. Langkah Implementasi Berikutnya
 
