@@ -54,6 +54,7 @@ body {
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid #8eadd7; outline-offset: 3px; }
+.tnum { font-variant-numeric: tabular-nums; }
 
 .auth-page {
   display: grid;

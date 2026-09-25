@@ -1,32 +1,36 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import { getCurrentUser } from "@/lib/auth/session";
-import { LogoutButton } from "@/components/auth/LogoutButton";
-import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
-import { MoneyCatMascot } from "@/components/brand/MoneyCatMascot";
+import { getTransactionsByUserId } from "@/lib/dashboard/transactions-server";
 
+export const metadata = {
+  title: "Dashboard — Moneyhist",
+  description:
+    "Ringkasan keuangan dan transaksi terbaru pengguna Moneyhist.",
+};
+
+// Membaca session per request — jangan di-prerender statis.
+export const dynamic = "force-dynamic";
+
+/**
+ * Halaman Dashboard (Server Component, FR-06 + FR-05 ayat 5).
+ * Guard: belum login -> redirect `/login`. User dibaca dari
+ * session auth — tanpa hardcode.
+ * Fetch awal memakai `user.id` dari session, lalu interaksi
+ * (periode, tambah transaksi) berjalan di `DashboardClient`.
+ */
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const initialTransactions = await getTransactionsByUserId(user.id);
 
   return (
-    <main className="dashboard-gate">
-      <section className="dashboard-gate-card">
-        <div className="dashboard-gate-content">
-          <div className="dashboard-gate-copy">
-            <MoneyhistLogo href="/dashboard" />
-            <p className="eyebrow" style={{ marginTop: 36 }}>Akun kamu</p>
-            <h1>Halo, {user.name}.</h1>
-            <p>Kamu berhasil masuk. Ringkasan transaksi akan muncul di sini setelah fitur transaksi tersedia.</p>
-            <div className="dashboard-gate-actions">
-              <Link href="/dashboard">Dashboard</Link>
-              <Link href="/settings">Pengaturan</Link>
-              <LogoutButton />
-            </div>
-          </div>
-          <MoneyCatMascot className="dashboard-mascot" />
-        </div>
-      </section>
+    <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-8">
+      <DashboardClient user={user} initialTransactions={initialTransactions} />
     </main>
   );
 }
