@@ -1,22 +1,17 @@
-import type { SessionUser, Transaction } from "@/lib/dashboard/types";
+import type { Transaction } from "@/lib/dashboard/types";
 
 /**
- * MOCK SEMENTARA — hapus / abaikan setelah backend asli tersedia.
- *
- * Data contoh milik satu user demo (mahasiswa). Semua transaksi memakai
- * `user_id` yang sama dengan `MOCK_USER.id`, jadi tidak ada hardcode
- * user_id di komponen — filter selalu mengikuti user yang login.
+ * ------------------------------------------------------------------
+ * TODO (Anggota 2 — database & backend transaksi): data sementara.
+ * `buildMockTransactions(userId)` menempelkan `user_id` dari session
+ * ke contoh transaksi agar halaman bisa didemo sebelum backend asli
+ * ada — tanpa hardcode user_id di komponen mana pun. Hapus file ini
+ * (dan pemakaiannya di route API) setelah endpoint/database asli jadi.
+ * ------------------------------------------------------------------
  */
-export const MOCK_USER: SessionUser = {
-  id: "user-mhs-001",
-  name: "Mahasiswa Demo",
-  email: "mahasiswa@moneyhist.id",
-};
-
-export const MOCK_TRANSACTIONS: Transaction[] = [
+const SEED: Array<Omit<Transaction, "user_id">> = [
   {
     id: "trx-08",
-    user_id: "user-mhs-001",
     type: "expense",
     description: "Bayar kos bulan September",
     amount: 800000,
@@ -24,7 +19,6 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: "trx-07",
-    user_id: "user-mhs-001",
     type: "income",
     description: "Gaji asisten lab",
     amount: 1200000,
@@ -32,7 +26,6 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: "trx-06",
-    user_id: "user-mhs-001",
     type: "expense",
     description: "Belanja bulanan",
     amount: 350000,
@@ -40,15 +33,13 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: "trx-05",
-    user_id: "user-mhs-001",
     type: "expense",
-    description: "Fotokopi & print tugas",
+    description: "Fotokopi dan print tugas",
     amount: 45000,
     date: "2026-09-15",
   },
   {
     id: "trx-04",
-    user_id: "user-mhs-001",
     type: "expense",
     description: "Makan di kantin kampus",
     amount: 60000,
@@ -56,7 +47,6 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: "trx-03",
-    user_id: "user-mhs-001",
     type: "income",
     description: "Uang saku bulanan",
     amount: 1500000,
@@ -64,7 +54,6 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: "trx-02",
-    user_id: "user-mhs-001",
     type: "expense",
     description: "Bensin motor",
     amount: 50000,
@@ -72,10 +61,13 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: "trx-01",
-    user_id: "user-mhs-001",
     type: "expense",
     description: "Kuota internet",
     amount: 75000,
     date: "2026-09-01",
   },
 ];
+
+export function buildMockTransactions(userId: string): Transaction[] {
+  return SEED.map((trx) => ({ ...trx, user_id: userId }));
+}

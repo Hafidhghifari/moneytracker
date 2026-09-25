@@ -1,33 +1,36 @@
 import { redirect } from "next/navigation";
-import { DashboardContent } from "@/components/dashboard/DashboardContent";
-import { getCurrentUser } from "@/lib/dashboard/session";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
+import { getSessionUser } from "@/lib/auth";
+import { getTransactionsByUserId } from "@/lib/dashboard/transactions-server";
 
 export const metadata = {
   title: "Dashboard — Moneyhist",
-  description: "Ringkasan keuangan dan transaksi terbaru pengguna.",
+  description:
+    "Ringkasan keuangan dan transaksi terbaru pengguna Moneyhist.",
 };
 
-// Halaman membaca session per request, jadi jangan di-prerender statis.
+// Membaca session per request — jangan di-prerender statis.
 export const dynamic = "force-dynamic";
 
 /**
- * Halaman Dashboard (Server Component).
- *
- * - Hanya bisa diakses setelah login: bila `getCurrentUser()` (session
- *   milik Anggota 1) mengembalikan null, redirect ke `/login`.
- * - Tidak ada hardcode user_id — `DashboardContent` menerima user dari
- *   session dan mengambil transaksi berdasarkan `user.id`.
+ * Halaman Dashboard (Server Component, FR-06 + FR-05 ayat 5).
+ * Guard: belum login -> redirect `/login`. User dibaca dari
+ * `getSessionUser()` (`lib/auth.ts`, milik Anggota 1) — tanpa hardcode.
+ * Fetch awal memakai `user.id` dari session, lalu interaksi
+ * (periode, tambah transaksi) berjalan di `DashboardClient`.
  */
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
+  const user = await getSessionUser();
 
   if (!user) {
     redirect("/login");
   }
 
+  const initialTransactions = await getTransactionsByUserId(user.id);
+
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
-      <DashboardContent user={user} />
+    <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-8">
+      <DashboardClient user={user} initialTransactions={initialTransactions} />
     </main>
   );
 }

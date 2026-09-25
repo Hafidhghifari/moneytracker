@@ -1,17 +1,17 @@
 import type {
   FinancialSummary,
+  Period,
   Transaction,
 } from "@/lib/dashboard/types";
 
 /**
- * Menghitung ringkasan keuangan dari daftar transaksi milik user.
- * Rumus: Saldo = Total Pemasukan - Total Pengeluaran.
- *
- * Fungsi murni (pure) — mudah di-unit-test dan dipakai ulang di
- * halaman lain tanpa bergantung pada fetch/session.
+ * Fungsi murni agregasi dashboard — tanpa fetch/session sehingga mudah
+ * diuji dan dipakai ulang. Rumus mengikuti SRS FR-06 / BR-06 s.d. BR-08.
  */
-export function calculateFinancialSummary(
-  transactions: Transaction[]
+
+/** Saldo = Total Pemasukan − Total Pengeluaran. */
+export function calculateSummary(
+  transactions: Transaction[],
 ): FinancialSummary {
   let totalIncome = 0;
   let totalExpense = 0;
@@ -25,48 +25,34 @@ export function calculateFinancialSummary(
     }
   }
 
-  return {
-    totalIncome,
-    totalExpense,
-    balance: totalIncome - totalExpense,
-  };
+  return { totalIncome, totalExpense, balance: totalIncome - totalExpense };
 }
 
-/**
- * Mengambil N transaksi terbaru, diurutkan dari yang paling baru
- * berdasarkan tanggal (lalu id sebagai penyeimbang yang stabil).
- */
-export function getRecentTransactions(
+/** Saring transaksi ke bulan aktif (format tanggal `YYYY-MM-DD`). */
+export function filterByPeriod(
   transactions: Transaction[],
-  limit = 5
+  period: Period,
 ): Transaction[] {
-  return [...transactions]
-    .sort((a, b) => {
-      const dateDiff =
-        new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (dateDiff !== 0) return dateDiff;
-      return b.id.localeCompare(a.id);
-    })
-    .slice(0, limit);
+  const prefix = `${period.year}-${String(period.month).padStart(2, "0")}`;
+  return transactions.filter((trx) => trx.date.startsWith(prefix));
 }
 
-/** Format angka ke Rupiah yang mudah dibaca, mis. Rp1.500.000 (NFR-02). */
-export function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+/** Urutkan terbaru dulu; id sebagai penyeimbang yang stabil. */
+export function sortNewestFirst(transactions: Transaction[]): Transaction[] {
+  return [...transactions].sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return b.id.localeCompare(a.id);
+  });
 }
 
-/** Format tanggal ISO ke tampilan Indonesia, mis. "24 Sep 2026". */
-export function formatTransactionDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return isoDate;
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+/** Geser periode satu bulan; menangani pergantian tahun. */
+export function shiftPeriod(period: Period, delta: -1 | 1): Period {
+  const date = new Date(period.year, period.month - 1 + delta, 1);
+  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+}
+
+/** Periode bulan berjalan — state awal navigator periode. */
+export function currentPeriod(): Period {
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
 }
