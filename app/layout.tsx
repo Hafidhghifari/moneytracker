@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Moneyhist — Keuangan Pribadi",
-  description: "Catat pemasukan dan pengeluaran dengan lebih mudah.",
+  title: "Moneyhist — Pencatat Keuangan Pribadi",
+  description:
+    "Moneyhist membantu mahasiswa mencatat pemasukan dan pengeluaran serta memantau kondisi keuangan.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-dvh flex-col">{children}</body>
     </html>
   );
 }

@@ -17,7 +17,17 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -37,6 +47,7 @@ body {
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid #8eadd7; outline-offset: 3px; }
+.tnum { font-variant-numeric: tabular-nums; }
 
 .auth-page {
   display: grid;
