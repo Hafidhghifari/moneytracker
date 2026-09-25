@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { hashPassword } from "../lib/auth/users";
 import { prisma } from "../lib/db";
 
 // Pembacaan/penulisan kolom @db.Date harus deterministik di mesin mana pun.
@@ -19,8 +20,8 @@ const SEED_USERS: Array<{
 }> = [
   {
     name: "User A",
-    email: "user.a@example.com",
-    password: "placeholder-hash-a",
+    email: "sza@mh.com",
+    password: "password123",
     transactions: [
       { type: "income", amount: "1500000.00", description: "Uang saku", transactionDate: "2026-09-01" },
       { type: "expense", amount: "25000.50", description: "Makan siang", transactionDate: "2026-09-02" },
@@ -29,8 +30,8 @@ const SEED_USERS: Array<{
   },
   {
     name: "User B",
-    email: "user.b@example.com",
-    password: "placeholder-hash-b",
+    email: "abc@mh.com",
+    password: "password123",
     transactions: [
       { type: "income", amount: "2000000.00", description: "Uang saku B", transactionDate: "2026-09-01" },
       { type: "expense", amount: "500000.00", description: "Sewa B", transactionDate: "2026-09-04" },
@@ -51,7 +52,7 @@ async function main(): Promise<void> {
       data: {
         name: seedUser.name,
         email: seedUser.email,
-        password: seedUser.password,
+        password: await hashPassword(seedUser.password),
       },
     });
 
