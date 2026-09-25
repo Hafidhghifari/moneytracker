@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/data/users.json
 
 # next.js
 /.next/
@@ -46,3 +47,6 @@ docs/
 
 # env example harus ikut ter-commit meskipun .env* diabaikan
 !.env.example
+
+# pnpm store
+/.pnpm-store/
