@@ -23,6 +23,32 @@ export interface SessionUser {
  * `user.id` dari fungsi ini — tidak ada user_id hardcode di mana pun.
  */
 export async function getSessionUser(): Promise<SessionUser | null> {
+  // ---------------------------------------------------------------
+  // MOCK SEMENTARA KHUSUS DEVELOPMENT — WAJIB DIHAPUS begitu
+  // session asli Anggota 1 selesai.
+  //
+  // Aktif HANYA bila BOTH kondisi terpenuhi:
+  //   1. `NEXT_PUBLIC_USE_MOCK_AUTH=true` di `.env.local`, DAN
+  //   2. `NODE_ENV !== "production"` (jadi tidak mungkin aktif di
+  //      production build / `next start`, walau env var-nya bocor).
+  //
+  // Cara mematikan: hapus baris flag dari `.env.local` (atau set
+  // `false`), lalu blok di bawah ini hapus seluruhnya dan biarkan
+  // pembacaan session asli Anggota 1 yang bekerja.
+  // ---------------------------------------------------------------
+  if (
+    process.env.NEXT_PUBLIC_USE_MOCK_AUTH === "true" &&
+    process.env.NODE_ENV !== "production"
+  ) {
+    return {
+      // id string (bukan number) mengikuti tipe SessionUser yang
+      // dipakai seluruh query transaksi (`user_id`).
+      id: "user-dev-001",
+      name: "Mahasiswa Demo",
+      email: "demo@test.com",
+    };
+  }
+
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
   if (!sessionToken) {
