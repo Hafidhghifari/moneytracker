@@ -83,11 +83,11 @@ Halaman autentikasi memakai bahasa visual dashboard yang sama, tetapi dengan kom
 
 ### Penempatan maskot kucing keberuntungan
 
-- Pada desktop, tempatkan maskot **di panel ilustrasi sebelah kiri, di sisi kanan teks pengantar**. Sejajarkan secara vertikal dengan blok judul dan deskripsi agar menjadi penyeimbang komposisi, bukan elemen yang menutupi atau mendahului form.
-- Jaga lebar ilustrasi sekitar **200–260 px** pada desktop lebar, dengan ruang kosong yang cukup dari tepi panel dan teks. Gunakan ukuran intrinsik yang proporsional; jangan dipotong, diregangkan, atau diberi latar kartu tersendiri.
+- Pada desktop, tempatkan maskot **di sebelah kanan logo/nama Moneyhist pada baris identitas di bagian atas panel sambutan**. Logo dan maskot berada dalam satu baris dengan jarak lega; jangan meletakkan maskot di area form atau menumpuknya di atas judul.
+- Ukuran maskot sekitar **88–104 px** pada desktop, cukup untuk dikenali tanpa menjadi lebih menonjol daripada nama Moneyhist. Pertahankan rasio intrinsik; jangan dipotong, diregangkan, atau diberi latar kartu tersendiri.
 - Urutan baca tetap logo, pesan singkat, lalu form. Maskot tidak boleh lebih dominan daripada judul form atau tombol Masuk/Buat akun. Jangan tambahkan caption atau tulisan dekoratif pada ilustrasi.
 - Hindari menempatkan maskot di atas field, di dalam tombol, menempel pada pesan error, atau sebagai watermark di belakang teks. Jangan menambahkan animasi bergerak terus-menerus.
-- Pada layar sempit, letakkan maskot kecil di sisi kanan pesan sambutan pada panel atas, dengan lebar sekitar **80–120 px**. Ringkas atau hilangkan teks pendukung yang tidak penting agar panel tidak mendorong form terlalu jauh ke bawah. Form tetap satu kolom dan segera terlihat setelah panel sambutan.
+- Pada layar sempit, pertahankan maskot di sebelah kanan nama Moneyhist pada baris identitas, dengan lebar sekitar **64–80 px**. Ringkas atau hilangkan teks pendukung yang tidak penting agar panel tidak mendorong form terlalu jauh ke bawah. Form tetap satu kolom dan segera terlihat setelah panel sambutan.
 - Untuk aksesibilitas, berikan teks alternatif singkat yang mendeskripsikan ilustrasi.
 - Gunakan ilustrasi maskot yang sama di dashboard dalam ukuran pendamping, misalnya di sisi kanan kartu sambutan. Di sana maskot tidak boleh mengambil ruang dari saldo, metrik, atau transaksi.
 

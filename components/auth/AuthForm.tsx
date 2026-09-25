@@ -49,14 +49,16 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="auth-page">
       <section className="auth-story" aria-label="Tentang Moneyhist">
-        <MoneyhistLogo />
+        <div className="story-brand-row">
+          <MoneyhistLogo />
+          <MoneyCatMascot className="auth-mascot" priority />
+        </div>
         <div className="story-content">
           <div className="story-copy">
             <p className="eyebrow">Keuangan lebih tertata</p>
             <h1>Langkah kecil untuk keuangan yang lebih tenang.</h1>
             <p>Catat pemasukan dan pengeluaranmu dalam satu tempat. Mulai dengan cara sederhana, lalu bangun kebiasaan yang baik.</p>
           </div>
-          <MoneyCatMascot className="auth-mascot" priority />
         </div>
         <div className="story-note"><span className="story-dot" aria-hidden="true" /> Dibuat untuk membantu mengelola keuangan pribadi.</div>
       </section>
