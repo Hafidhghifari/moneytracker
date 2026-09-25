@@ -1,4 +1,4 @@
-# Software Requirements Specification (SRS)
+﻿# Software Requirements Specification (SRS)
 # Moneyhist - Personal Expense Tracker
 
 ## 1. Pendahuluan

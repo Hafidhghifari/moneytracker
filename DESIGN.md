@@ -1,4 +1,4 @@
-# Moneyhist UI Baseline
+﻿# Moneyhist UI Baseline
 
 Dokumen ini menetapkan baseline antarmuka Moneyhist, aplikasi web pencatat keuangan pribadi untuk mahasiswa. Screenshot dashboard yang diberikan menjadi referensi suasana visual: ringan, lapang, lembut, dan mudah dipindai. Nama, logo, maskot, teks, susunan persis, dan elemen merek dari gambar tidak digunakan.
 

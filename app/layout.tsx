@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,12 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Moneyhist — Pencatat Keuangan Pribadi",
+  title: {
+    default: "Moneyhist",
+    template: "%s · Moneyhist",
+  },
   description:
     "Moneyhist membantu mahasiswa mencatat pemasukan dan pengeluaran serta memantau kondisi keuangan.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="id"
