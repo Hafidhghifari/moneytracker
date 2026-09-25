@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
 
 type AuthMode = "login" | "register";
 
@@ -47,10 +48,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   return (
     <main className="auth-page">
       <section className="auth-story" aria-label="Tentang Moneyhist">
-        <Link className="brand" href="/login" aria-label="Moneyhist, halaman masuk">
-          <span className="brand-mark" aria-hidden="true">mh</span>
-          <span className="brand-name">moneyhist</span>
-        </Link>
+        <MoneyhistLogo />
         <div className="story-copy">
           <p className="eyebrow">Keuangan lebih tertata</p>
           <h1>Langkah kecil untuk keuangan yang lebih tenang.</h1>
