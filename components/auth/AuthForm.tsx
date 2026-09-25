@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
-import { MoneyCatMascot } from "@/components/brand/MoneyCatMascot";
 
 type AuthMode = "login" | "register";
 
@@ -51,7 +50,6 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <section className="auth-story" aria-label="Tentang Moneyhist">
         <div className="story-brand-row">
           <MoneyhistLogo />
-          <MoneyCatMascot className="auth-mascot" priority />
         </div>
         <div className="story-content">
           <div className="story-copy">

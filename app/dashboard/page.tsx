@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
-import { MoneyCatMascot } from "@/components/brand/MoneyCatMascot";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -23,7 +22,6 @@ export default async function DashboardPage() {
               <LogoutButton />
             </div>
           </div>
-          <MoneyCatMascot className="dashboard-mascot" />
         </div>
       </section>
     </main>

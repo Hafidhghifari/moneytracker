@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MoneyCatMascot } from "@/components/brand/MoneyCatMascot";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +24,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <MoneyCatMascot />
+      </body>
     </html>
   );
 }
