@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
   --background: #f3f6fa;
@@ -17,9 +17,24 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  color: var(--foreground);
 }
 
 * { box-sizing: border-box; }
@@ -33,6 +48,8 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   font-size: 15px;
   line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
