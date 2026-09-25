@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -10,10 +11,7 @@ export default async function DashboardPage() {
   return (
     <main className="dashboard-gate">
       <section className="dashboard-gate-card">
-        <Link className="brand" href="/dashboard">
-          <span className="brand-mark" aria-hidden="true">mh</span>
-          <span className="brand-name">moneyhist</span>
-        </Link>
+        <MoneyhistLogo href="/dashboard" />
         <p className="eyebrow" style={{ marginTop: 36 }}>Akun kamu</p>
         <h1>Halo, {user.name}.</h1>
         <p>Kamu berhasil masuk. Ringkasan transaksi akan muncul di sini setelah fitur transaksi tersedia.</p>

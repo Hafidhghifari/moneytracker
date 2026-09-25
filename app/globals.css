@@ -56,9 +56,14 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding: clamp(28px, 5vw, 64px);
   background: radial-gradient(ellipse at 80% 18%, #d7eeea 0, transparent 44%), linear-gradient(145deg, #edf5f4, #e8eff5 72%, #e2edf0);
 }
-.brand { display: inline-flex; width: fit-content; align-items: center; gap: 11px; color: var(--foreground); text-decoration: none; }
-.brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; background: var(--primary); color: white; font-size: 15px; font-weight: 700; letter-spacing: -.04em; }
-.brand-name { font-size: 20px; font-weight: 650; letter-spacing: -.04em; }
+.brand { display: inline-flex; width: fit-content; align-items: center; gap: 12px; color: var(--foreground); text-decoration: none; }
+.brand-mark { width: 46px; height: 46px; overflow: visible; transition: transform .2s ease; }
+.brand:hover .brand-mark { transform: translateY(-1px) rotate(-2deg); }
+.brand-mark-bg { fill: #277c78; }
+.brand-mark-letter { color: white; }
+.brand-mark-rise { color: #c9eeea; }
+.brand-name { color: #172b32; font-size: 21px; font-weight: 580; letter-spacing: -.055em; }
+.brand-name span { font-weight: 730; }
 .story-copy { max-width: 560px; margin: auto 0; padding: 72px 0; }
 .eyebrow { margin: 0 0 14px; color: var(--primary); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .story-copy h1 { max-width: 530px; margin: 0; font-size: clamp(36px, 5vw, 62px); font-weight: 570; letter-spacing: -.055em; line-height: 1.08; }
