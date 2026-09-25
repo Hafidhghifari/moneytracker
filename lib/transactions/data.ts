@@ -1,6 +1,10 @@
 import { prisma } from "../db";
 import type { TransactionType as PrismaTransactionType } from "../generated/prisma/client";
-import type { TransactionFilter, TransactionType } from "./schema";
+import type {
+  TransactionFilter,
+  TransactionInput,
+  TransactionType,
+} from "./schema";
 
 export type TransactionDTO = {
   id: number;
@@ -114,4 +118,40 @@ export async function getSummary(userId: number): Promise<TransactionSummary> {
   }
 
   return { income, expense, balance: income - expense };
+}
+
+export async function createTransaction(
+  userId: number,
+  input: TransactionInput,
+): Promise<TransactionDTO> {
+  assertUserId(userId);
+
+  const row = await prisma.transaction.create({
+    data: {
+      userId,
+      type: input.type,
+      amount: input.amount.toFixed(2),
+      description: input.description,
+      transactionDate: toTransactionDate(input.transactionDate),
+    },
+  });
+
+  return toDTO(row);
+}
+
+export async function deleteTransaction(
+  userId: number,
+  transactionId: number,
+): Promise<boolean> {
+  assertUserId(userId);
+
+  if (!Number.isInteger(transactionId) || transactionId <= 0) {
+    return false;
+  }
+
+  const result = await prisma.transaction.deleteMany({
+    where: { id: transactionId, userId },
+  });
+
+  return result.count === 1;
 }

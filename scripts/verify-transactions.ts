@@ -2,6 +2,8 @@ import "dotenv/config";
 import { getCurrentUserId } from "../lib/auth";
 import { prisma } from "../lib/db";
 import {
+  createTransaction,
+  deleteTransaction,
   getRecentTransactions,
   getSummary,
   getTransactions,
@@ -186,6 +188,94 @@ async function main(): Promise<void> {
       summaryKosong.expense === 0 &&
       summaryKosong.balance === 0,
   );
+
+  // --- 4. Mutasi & otorisasi ----------------------------------------
+  const baselineA = (await getTransactions(userA.id, "all")).length;
+
+  const created = await createTransaction(userA.id, {
+    type: "expense",
+    amount: 12345.67,
+    description: "VERIFY sementara",
+    transactionDate: "2026-09-10",
+  });
+
+  const stored = await prisma.transaction.findUniqueOrThrow({
+    where: { id: created.id },
+  });
+  check("create menempelkan user_id dari parameter", stored.userId === userA.id);
+  check(
+    "create menyimpan nominal presisi 2 desimal",
+    stored.amount.toString() === "12345.67",
+    stored.amount.toString(),
+  );
+  check(
+    "create menyimpan tanggal sebagai date",
+    stored.transactionDate.toISOString().slice(0, 10) === "2026-09-10",
+  );
+
+  const rawDate = await prisma.$queryRaw<Array<{ value: string }>>`
+    SELECT to_char(transaction_date, 'YYYY-MM-DD') AS value
+    FROM transactions
+    WHERE id = ${created.id}
+  `;
+  check(
+    "tanggal tersimpan benar di database (raw SQL)",
+    rawDate[0]?.value === "2026-09-10",
+    rawDate[0]?.value,
+  );
+
+  check(
+    "create menambah jumlah transaksi",
+    (await getTransactions(userA.id, "all")).length === baselineA + 1,
+  );
+
+  const transactionB = await prisma.transaction.findFirstOrThrow({
+    where: { userId: userB.id },
+    select: { id: true },
+  });
+  check(
+    "user A tidak bisa menghapus transaksi user B",
+    (await deleteTransaction(userA.id, transactionB.id)) === false,
+  );
+  check(
+    "transaksi user B masih ada setelah percobaan hapus",
+    (await prisma.transaction.count({ where: { id: transactionB.id } })) === 1,
+  );
+
+  check(
+    "user A bisa menghapus transaksinya sendiri",
+    (await deleteTransaction(userA.id, created.id)) === true,
+  );
+  check(
+    "hapus dua kali mengembalikan false",
+    (await deleteTransaction(userA.id, created.id)) === false,
+  );
+  check(
+    "jumlah transaksi kembali ke baseline",
+    (await getTransactions(userA.id, "all")).length === baselineA,
+  );
+
+  let unknownUserRejected = false;
+  try {
+    await createTransaction(999999, {
+      type: "income",
+      amount: 1000,
+      description: "Tes FK",
+      transactionDate: "2026-09-01",
+    });
+  } catch {
+    unknownUserRejected = true;
+  }
+  check("create dengan user tidak ada ditolak", unknownUserRejected);
+
+  let deleteUndefinedUserRejected = false;
+  try {
+    // @ts-expect-error sengaja menguji guard runtime
+    await deleteTransaction(undefined, transactionB.id);
+  } catch {
+    deleteUndefinedUserRejected = true;
+  }
+  check("delete dengan userId undefined ditolak", deleteUndefinedUserRejected);
 }
 
 main()
