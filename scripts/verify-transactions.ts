@@ -3,6 +3,7 @@ import { getCurrentUserId } from "../lib/auth";
 import { prisma } from "../lib/db";
 import {
   getRecentTransactions,
+  getSummary,
   getTransactions,
 } from "../lib/transactions/data";
 import {
@@ -157,6 +158,34 @@ async function main(): Promise<void> {
     undefinedUserRejected = true;
   }
   check("userId undefined ditolak", undefinedUserRejected);
+
+  // --- 3. Ringkasan keuangan ----------------------------------------
+  const summaryA = await getSummary(userA.id);
+  check("income user A", summaryA.income === 1500000, String(summaryA.income));
+  check(
+    "expense user A",
+    summaryA.expense === 125000.5,
+    String(summaryA.expense),
+  );
+  check(
+    "balance user A = income - expense",
+    summaryA.balance === 1374999.5,
+    String(summaryA.balance),
+  );
+
+  const summaryB = await getSummary(userB.id);
+  check(
+    "summary user B terpisah dari user A",
+    summaryB.income === 2000000 && summaryB.expense === 500000,
+  );
+
+  const summaryKosong = await getSummary(999999);
+  check(
+    "summary user tanpa transaksi bernilai nol",
+    summaryKosong.income === 0 &&
+      summaryKosong.expense === 0 &&
+      summaryKosong.balance === 0,
+  );
 }
 
 main()

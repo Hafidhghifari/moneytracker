@@ -85,3 +85,33 @@ export async function getRecentTransactions(
 
   return rows.map(toDTO);
 }
+
+export type TransactionSummary = {
+  income: number;
+  expense: number;
+  balance: number;
+};
+
+export async function getSummary(userId: number): Promise<TransactionSummary> {
+  assertUserId(userId);
+
+  const grouped = await prisma.transaction.groupBy({
+    by: ["type"],
+    where: { userId },
+    _sum: { amount: true },
+  });
+
+  let income = 0;
+  let expense = 0;
+
+  for (const group of grouped) {
+    const total = Number(group._sum.amount?.toString() ?? "0");
+    if (group.type === "income") {
+      income = total;
+    } else {
+      expense = total;
+    }
+  }
+
+  return { income, expense, balance: income - expense };
+}
