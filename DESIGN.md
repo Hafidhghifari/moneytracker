@@ -81,8 +81,19 @@ Contoh peta ke CSS: definisikan token pada `:root` di `app/globals.css`, lalu pe
 
 Halaman autentikasi memakai bahasa visual dashboard yang sama, tetapi dengan komposisi lebih fokus dan minim gangguan. Pertahankan latar biru-abu pucat, bidang form putih, radius lembut, border tipis, dan aksen biru. Jangan memakai bidang hijau besar atau gradien hijau.
 
+### Penempatan maskot kucing keberuntungan
+
+- Pada desktop, tempatkan maskot **di panel ilustrasi sebelah kiri, di sisi kanan teks pengantar**. Sejajarkan secara vertikal dengan blok judul dan deskripsi agar menjadi penyeimbang komposisi, bukan elemen yang menutupi atau mendahului form.
+- Jaga lebar ilustrasi sekitar **200–260 px** pada desktop lebar, dengan ruang kosong yang cukup dari tepi panel dan teks. Gunakan ukuran intrinsik yang proporsional; jangan dipotong, diregangkan, atau diberi latar kartu tersendiri.
+- Urutan baca tetap logo, pesan singkat, lalu form. Maskot tidak boleh lebih dominan daripada judul form atau tombol Masuk/Buat akun. Jangan tambahkan caption atau tulisan dekoratif pada ilustrasi.
+- Hindari menempatkan maskot di atas field, di dalam tombol, menempel pada pesan error, atau sebagai watermark di belakang teks. Jangan menambahkan animasi bergerak terus-menerus.
+- Pada layar sempit, letakkan maskot kecil di sisi kanan pesan sambutan pada panel atas, dengan lebar sekitar **80–120 px**. Ringkas atau hilangkan teks pendukung yang tidak penting agar panel tidak mendorong form terlalu jauh ke bawah. Form tetap satu kolom dan segera terlihat setelah panel sambutan.
+- Untuk aksesibilitas, berikan teks alternatif singkat yang mendeskripsikan ilustrasi.
+- Gunakan ilustrasi maskot yang sama di dashboard dalam ukuran pendamping, misalnya di sisi kanan kartu sambutan. Di sana maskot tidak boleh mengambil ruang dari saldo, metrik, atau transaksi.
+
 - Letakkan logo/nama Moneyhist di bagian atas kartu atau kolom form dengan ruang lega. Gunakan logo produk sendiri bila tersedia; jangan mengambil logo atau maskot dari gambar referensi.
-- Pada desktop, gunakan susunan dua kolom: sisi form yang cukup lebar dan area visual pendamping yang sederhana, misalnya blok warna biru pucat dengan ilustrasi produk opsional. Form tetap menjadi fokus. Hindari dekorasi atau teks promosi yang berlebihan.
+- Pada desktop, gunakan susunan dua kolom: sisi form yang cukup lebar dan panel visual biru pucat di sampingnya. Form tetap menjadi fokus. Hindari dekorasi atau teks promosi yang berlebihan.
+- Gunakan maskot orisinal Moneyhist berupa kucing keberuntungan pada panel autentikasi dan dashboard. Jaga ilustrasi tetap sebagai aksen pendamping, bukan penghalang form atau informasi utama.
 - Pada layar kecil, hilangkan area pendamping dan tampilkan form satu kolom dengan padding 20–24 px. Konten harus muat tanpa scroll horizontal.
 - Login berisi judul singkat, penjelasan opsional, field email dan password, kontrol tampil/sembunyikan password bila disediakan, tombol utama **Masuk**, lalu tautan ke register.
 - Register berisi nama, email, dan password sesuai SRS, tombol utama **Buat akun**, lalu tautan ke login. Jangan menambahkan field atau pilihan autentikasi yang belum didukung sistem.

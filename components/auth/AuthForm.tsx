@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
+import { MoneyCatMascot } from "@/components/brand/MoneyCatMascot";
 
 type AuthMode = "login" | "register";
 
@@ -49,10 +50,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     <main className="auth-page">
       <section className="auth-story" aria-label="Tentang Moneyhist">
         <MoneyhistLogo />
-        <div className="story-copy">
-          <p className="eyebrow">Keuangan lebih tertata</p>
-          <h1>Langkah kecil untuk keuangan yang lebih tenang.</h1>
-          <p>Catat pemasukan dan pengeluaranmu dalam satu tempat. Mulai dengan cara sederhana, lalu bangun kebiasaan yang baik.</p>
+        <div className="story-content">
+          <div className="story-copy">
+            <p className="eyebrow">Keuangan lebih tertata</p>
+            <h1>Langkah kecil untuk keuangan yang lebih tenang.</h1>
+            <p>Catat pemasukan dan pengeluaranmu dalam satu tempat. Mulai dengan cara sederhana, lalu bangun kebiasaan yang baik.</p>
+          </div>
+          <MoneyCatMascot className="auth-mascot" priority />
         </div>
         <div className="story-note"><span className="story-dot" aria-hidden="true" /> Dibuat untuk membantu mengelola keuangan pribadi.</div>
       </section>
