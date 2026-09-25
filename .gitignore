@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/data/users.json
 
 # next.js
 /.next/
@@ -39,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+docs/
+
+# prisma generated client
+/lib/generated
+
+# env example harus ikut ter-commit meskipun .env* diabaikan
+!.env.example
+
+# pnpm store
+/.pnpm-store/
