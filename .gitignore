@@ -40,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 docs/
+
+# prisma generated client
+/lib/generated
+
+# env example harus ikut ter-commit meskipun .env* diabaikan
+!.env.example
