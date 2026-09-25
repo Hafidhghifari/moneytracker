@@ -85,6 +85,7 @@ Halaman autentikasi memakai bahasa visual dashboard yang sama, tetapi dengan kom
 
 - Pada desktop, tempatkan maskot **di sebelah kanan logo/nama Moneyhist pada baris identitas di bagian atas panel sambutan**. Logo dan maskot berada dalam satu baris dengan jarak lega; jangan meletakkan maskot di area form atau menumpuknya di atas judul.
 - Ukuran maskot sekitar **88–104 px** pada desktop, cukup untuk dikenali tanpa menjadi lebih menonjol daripada nama Moneyhist. Pertahankan rasio intrinsik; jangan dipotong, diregangkan, atau diberi latar kartu tersendiri.
+- Letakkan pesan “Keuangan lebih tertata” sekitar **20–36 px** di bawah baris identitas. Jangan membagi panel menjadi tiga zona vertikal yang berjauhan; judul dan deskripsinya harus terasa satu kelompok dengan logo, sementara catatan pendukung boleh tetap dekat bagian bawah.
 - Urutan baca tetap logo, pesan singkat, lalu form. Maskot tidak boleh lebih dominan daripada judul form atau tombol Masuk/Buat akun. Jangan tambahkan caption atau tulisan dekoratif pada ilustrasi.
 - Hindari menempatkan maskot di atas field, di dalam tombol, menempel pada pesan error, atau sebagai watermark di belakang teks. Jangan menambahkan animasi bergerak terus-menerus.
 - Pada layar sempit, pertahankan maskot di sebelah kanan nama Moneyhist pada baris identitas, dengan lebar sekitar **64–80 px**. Ringkas atau hilangkan teks pendukung yang tidak penting agar panel tidak mendorong form terlalu jauh ke bawah. Form tetap satu kolom dan segera terlihat setelah panel sambutan.
