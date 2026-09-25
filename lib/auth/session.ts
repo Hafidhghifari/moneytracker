@@ -2,6 +2,8 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { findUserById, getUserSessionVersion, revokeUserSessions, type PublicUser } from "./users";
 
+export type { PublicUser };
+
 const cookieName = "moneyhist_session";
 const sessionLifetime = 60 * 60 * 24 * 7;
 

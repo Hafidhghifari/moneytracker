@@ -6,27 +6,45 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { ToastProvider } from "@/components/ui/toast";
 import { IconButton } from "@/components/ui/button";
+import type { PublicUser } from "@/lib/auth/session";
 import { SidebarNav } from "./sidebar";
 import { Topbar } from "./topbar";
 
 const pageTitles: Record<string, string> = {
+  "/dashboard": "Dashboard",
   "/transactions": "Riwayat Transaksi",
   "/transactions/new": "Tambah Transaksi",
+  "/riwayat": "Riwayat Transaksi",
+  "/settings": "Pengaturan",
 };
 
 function resolveTitle(pathname: string): string {
-  return pageTitles[pathname] ?? "Moneyhist";
+  if (pageTitles[pathname]) return pageTitles[pathname];
+  if (pathname.startsWith("/transactions")) return "Transaksi";
+  return "Moneyhist";
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  user,
+  children,
+}: {
+  user: PublicUser;
+  children: ReactNode;
+}) {
   return (
     <ToastProvider>
-      <Shell>{children}</Shell>
+      <Shell user={user}>{children}</Shell>
     </ToastProvider>
   );
 }
 
-function Shell({ children }: { children: ReactNode }) {
+function Shell({
+  user,
+  children,
+}: {
+  user: PublicUser;
+  children: ReactNode;
+}) {
   const pathname = usePathname();
   const [pathSnap, setPathSnap] = useState(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,7 +67,7 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh lg:pl-60">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-surface lg:block">
-        <SidebarNav />
+        <SidebarNav user={user} />
       </aside>
 
       <div
@@ -76,13 +94,14 @@ function Shell({ children }: { children: ReactNode }) {
               <X className="size-5" aria-hidden="true" />
             </IconButton>
           </div>
-          <SidebarNav onNavigate={() => setMenuOpen(false)} />
+          <SidebarNav user={user} onNavigate={() => setMenuOpen(false)} />
         </aside>
       </div>
 
       <div className="flex min-h-dvh flex-col">
         <Topbar
           title={resolveTitle(pathname)}
+          user={user}
           onMenuClick={() => setMenuOpen(true)}
         />
         <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-6 md:px-8 md:py-8">

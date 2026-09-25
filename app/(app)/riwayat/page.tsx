@@ -13,21 +13,20 @@ export const metadata = {
  */
 export default function RiwayatPlaceholderPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-8">
+    <div className="mx-auto w-full max-w-3xl">
       <h1 className="text-2xl font-semibold sm:text-3xl">
         Riwayat transaksi
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Halaman riwayat lengkap sedang dikerjakan oleh Anggota 4 (bagian
-        Transaction UI &amp; Filter), termasuk filter Semua, Pemasukan,
-        dan Pengeluaran.
+        Riwayat lengkap kini tersedia di halaman Transaksi, lengkap dengan
+        filter Semua, Pemasukan, dan Pengeluaran.
       </p>
       <Link
-        href="/dashboard"
+        href="/transactions"
         className="mt-6 inline-flex h-11 items-center justify-center rounded-[10px] bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
       >
-        Kembali ke dashboard
+        Buka halaman transaksi
       </Link>
-    </main>
+    </div>
   );
 }
