@@ -19,6 +19,10 @@ model User {
   email        String        @unique
   password     String
   preference   String?
+<<<<<<< HEAD
+=======
+  sessionVersion Int          @default(0) @map("session_version")
+>>>>>>> 3363d1f2899e2e7f56b87ee9ab105e73caf02a04
   transactions Transaction[]
 
   @@map("users")

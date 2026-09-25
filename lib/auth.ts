@@ -1,21 +1,12 @@
-import { prisma } from "./db";
-
-const DEV_USER_EMAIL = "user.a@example.com";
+import { getCurrentUser } from "./auth/session";
 
 /**
- * KONTRAK untuk Anggota 1 (Authentication):
- * ganti isi fungsi ini dengan pembacaan session yang sebenarnya.
- * Signature `(): Promise<number | null>` tidak boleh berubah.
+ * Ambil ID pengguna database dari session login yang telah diverifikasi.
+ * Signature ini dipakai oleh server actions transaksi.
  */
 export async function getCurrentUserId(): Promise<number | null> {
-  if (process.env.NODE_ENV === "production") {
-    return null;
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: DEV_USER_EMAIL },
-    select: { id: true },
-  });
-
-  return user?.id ?? null;
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const userId = Number(user.id);
+  return Number.isSafeInteger(userId) && userId > 0 ? userId : null;
 }
