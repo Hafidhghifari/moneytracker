@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "Moneyhist membantu mahasiswa mencatat pemasukan dan pengeluaran serta memantau kondisi keuangan.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="id"
