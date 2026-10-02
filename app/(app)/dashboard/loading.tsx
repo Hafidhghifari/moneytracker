@@ -14,6 +14,10 @@ export default function DashboardLoading() {
           aria-hidden="true"
           className="h-[60px] animate-pulse rounded-2xl border border-border bg-surface"
         />
+        <div
+          aria-hidden="true"
+          className="h-40 animate-pulse rounded-2xl border border-border bg-surface"
+        />
         <RecentTransactionsSkeleton />
       </div>
     </main>

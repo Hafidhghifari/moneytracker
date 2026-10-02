@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
+  Wallet,
 } from "lucide-react";
 import { MoneyhistLogo } from "@/components/brand/MoneyhistLogo";
 
@@ -39,6 +40,12 @@ function navItems(pathname: string): NavItem[] {
       label: "Transaksi",
       icon: ArrowLeftRight,
       active: pathname.startsWith("/transactions"),
+    },
+    {
+      href: "/budget",
+      label: "Budget",
+      icon: Wallet,
+      active: pathname.startsWith("/budget"),
     },
     {
       href: "/settings",

@@ -1,14 +1,13 @@
 "use client";
 
 import { TRANSACTION_TYPE_LABEL } from "@/lib/transactions";
-import type { Transaction, TransactionType } from "@/lib/transactions";
-
-export type TransactionFilter = "all" | TransactionType;
+import type { TransactionCounts } from "@/lib/transactions";
+import type { TransactionFilter } from "@/lib/transactions/schema";
 
 interface TransactionFilterProps {
   value: TransactionFilter;
   onChange: (value: TransactionFilter) => void;
-  transactions: Transaction[];
+  counts: TransactionCounts;
 }
 
 const options: Array<{ value: TransactionFilter; label: string }> = [
@@ -17,18 +16,10 @@ const options: Array<{ value: TransactionFilter; label: string }> = [
   { value: "expense", label: TRANSACTION_TYPE_LABEL.expense },
 ];
 
-function countFor(
-  filter: TransactionFilter,
-  transactions: Transaction[]
-): number {
-  if (filter === "all") return transactions.length;
-  return transactions.filter((item) => item.type === filter).length;
-}
-
 export function TransactionFilterControl({
   value,
   onChange,
-  transactions,
+  counts,
 }: TransactionFilterProps) {
   return (
     <div
@@ -38,7 +29,7 @@ export function TransactionFilterControl({
     >
       {options.map((option) => {
         const active = value === option.value;
-        const count = countFor(option.value, transactions);
+        const count = counts[option.value];
         const tone =
           option.value === "income"
             ? "text-income"
