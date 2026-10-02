@@ -2,8 +2,6 @@ services:
   app:
     build:
       context: .
-      args:
-        NEXT_PUBLIC_TRANSACTIONS_MOCK: "1"
     container_name: moneyhist-app
     restart: unless-stopped
     ports:

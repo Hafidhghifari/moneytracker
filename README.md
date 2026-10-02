@@ -32,7 +32,9 @@ Pendaftaran dan login yang berhasil mengarahkan pengguna ke `/dashboard`. Halama
 | `pnpm db:generate` | Generate Prisma Client ke `lib/generated/prisma` |
 | `pnpm db:migrate` | Buat/terapkan migrasi Prisma |
 | `pnpm db:seed` | Isi ulang data contoh (idempotent) |
-| `pnpm db:verify` | Jalankan 42 assertion acceptance criteria |
+| `pnpm db:verify` | Jalankan 42 assertion acceptance criteria transaksi |
+| `pnpm db:verify:budget` | Jalankan assertion integrasi & authorization Monthly Budget |
+| `pnpm db:verify:all` | Jalankan kedua suite verifikasi |
 | `pnpm db:studio` | Buka Prisma Studio |
 
 Reset total database:
@@ -49,15 +51,41 @@ pnpm db:seed
 
 | Modul | Isi |
 |---|---|
-| `lib/auth.ts` | `getCurrentUserId(): Promise<number \| null>` — **seam untuk Anggota 1**. Ganti isi fungsinya dengan pembacaan session asli; signature tidak boleh berubah. |
+| `lib/auth.ts` | `getCurrentUserId(): Promise<number \| null>` — membaca session asli (`lib/auth/session.ts`). |
 | `lib/transactions/schema.ts` | Tipe + zod schema (`transactionInputSchema`, `deleteTransactionSchema`, `transactionFilterSchema`). Aman diimpor dari client component. |
 | `lib/transactions/data.ts` | Fungsi baca/mutasi. Semuanya menerima `userId` eksplisit; `userId` tidak pernah berasal dari client. |
+| `lib/transactions/wire.ts` | `toWireTransaction` — memetakan DTO database ke bentuk yang dikonsumsi UI. |
 | `lib/transactions/actions.ts` | `addTransactionAction` / `deleteTransactionAction` untuk form (`useActionState`). |
+
+### API AJAX
+
+Semua endpoint mengambil `userId` dari session di server, bukan body/query
+(FR-07, FR-13, FR-20). Tanpa session valid, respons `401`. Transaksi milik akun
+lain tidak dapat dibaca/diubah/dihapus.
+
+| Metode & path | Fungsi |
+|---|---|
+| `GET /api/transactions` | `200 { data: Transaction[] }` — transaksi milik user login. |
+| `POST /api/transactions` | `201 { data: Transaction }`. Menerima `type`, `amount`, `description`, dan `date` (atau `transaction_date`). |
+| `DELETE /api/transactions/[id]` | `200 { data: { id } }`, `404` bila bukan milik user. |
+
+Bentuk data ke UI: `{ id, user_id, type, amount, description, date }`.
+
+## Kontrak Monthly Budget
+
+| Modul | Isi |
+|---|---|
+| `lib/budget/schema.ts` | `budgetInputSchema` (`year`, `month` 1–12, `amount`) + helper periode. Aman diimpor dari client component. |
+| `lib/budget/data.ts` | `getBudget`, `setBudget` (upsert), `getMonthlyExpenseTotal`, `getBudgetSummary`. Semuanya menerima `userId` eksplisit (FR-20) dan dihitung dari transaksi `expense` user pada bulan terpilih (FR-21). |
+
+Sisa anggaran mengikuti rumus SRS: `remaining = budget - totalExpense`.
 
 ### Catatan integrasi
 
-- **Anggota 3 (dashboard)**: import `getSummary` dan `getRecentTransactions` dari
-  `lib/transactions/data.ts` di server component.
+- **Anggota 1 & 3 (dashboard/budget UI)**: `getBudgetSummary` untuk Budget
+  Summary, `getSummary`/`getRecentTransactions` di server component.
+- **Anggota 3 (bulan)**: pilih periode lalu panggil `getBudgetSummary(userId, { year, month })`.
+- **Anggota 4 (Set Budget)**: `setBudget(userId, { year, month, amount })`.
 - **Anggota 4 (UI transaksi)**: pakai `addTransactionAction` /
   `deleteTransactionAction`, dan validasi filter dari `searchParams` dengan
   `transactionFilterSchema` sebelum memanggil `getTransactions`.

@@ -33,12 +33,6 @@ export function MonthlyBudgetCard({ period, totalExpense }: MonthlyBudgetCardPro
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    setError("");
-    setNotice("");
-    setBudget(null);
-    setAmount("");
-    setEditing(false);
 
     void fetch(`/api/monthly-budget?year=${period.year}&month=${period.month}`, {
       cache: "no-store",
@@ -224,7 +218,12 @@ export function MonthlyBudgetCard({ period, totalExpense }: MonthlyBudgetCardPro
       {error && !loading && !editing && (
         <button
           type="button"
-          onClick={() => setReloadVersion((version) => version + 1)}
+          onClick={() => {
+            setLoading(true);
+            setError("");
+            setNotice("");
+            setReloadVersion((version) => version + 1);
+          }}
           className="mt-3 min-h-10 rounded-[10px] border border-border px-4 text-sm font-medium hover:bg-surface-muted"
         >
           Coba lagi

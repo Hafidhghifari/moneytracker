@@ -102,7 +102,11 @@ export function DashboardClient({
 
       <PeriodNavigator period={period} onChange={setPeriod} />
 
-      <MonthlyBudgetCard period={period} totalExpense={summary.totalExpense} />
+      <MonthlyBudgetCard
+        key={`${period.year}-${period.month}`}
+        period={period}
+        totalExpense={summary.totalExpense}
+      />
 
       {loadError ? (
         <div
