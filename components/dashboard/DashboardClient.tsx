@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AddTransactionForm } from "@/components/dashboard/AddTransactionForm";
+import { BudgetSummary } from "@/components/dashboard/BudgetSummary";
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { PeriodNavigator } from "@/components/dashboard/PeriodNavigator";
 import {
@@ -11,12 +12,15 @@ import {
 import { Toast, type ToastData } from "@/components/dashboard/Toast";
 import { formatPeriod } from "@/lib/dashboard/format";
 import {
+  DASHBOARD_REFRESH_EVENT,
+  fetchDashboardData,
+} from "@/lib/dashboard/dashboard-api";
+import {
   calculateSummary,
   currentPeriod,
   filterByPeriod,
   sortNewestFirst,
 } from "@/lib/dashboard/summary";
-import { fetchTransactionsClient } from "@/lib/dashboard/transactions";
 import type {
   Period,
   Transaction,
@@ -32,10 +36,27 @@ interface DashboardClientProps {
 
 const RECENT_LIMIT = 5;
 
+declare global {
+  interface Window {
+    /**
+     * Refresh dashboard via AJAX tanpa reload (FR-12, milik Anggota 1).
+     * Diekspos agar bisa dipanggil ulang dari konsol/devtools atau kode
+     * anggota lain, mis. `window.refreshDashboard?.()`.
+     */
+    refreshDashboard?: () => void;
+  }
+}
+
 /**
  * Orkestrasi interaktif dashboard: periode, daftar, form, dan toast.
  * Setelah tambah transaksi sukses, daftar + ringkasan ter-update
  * otomatis tanpa reload (state lokal + refetch sinkronisasi).
+ *
+ * Data dimuat ulang lewat AJAX (`refreshDashboard`, FR-12): saat pertama
+ * tampil (silent), lewat tombol "Coba lagi", lewat
+ * `window.refreshDashboard()`, atau lewat event
+ * `moneyhist:transactions-changed` (kontrak untuk Anggota 2 — cukup
+ * dispatch event setelah tambah/hapus transaksi).
  */
 export function DashboardClient({
   user,
@@ -44,6 +65,7 @@ export function DashboardClient({
   const router = useRouter();
   const [transactions, setTransactions] =
     useState<Transaction[]>(initialTransactions);
+  const [userName, setUserName] = useState(user.name);
   const [period, setPeriod] = useState<Period>(() => currentPeriod());
   const [formOpen, setFormOpen] = useState(false);
   const [toast, setToast] = useState<ToastData | null>(null);
@@ -62,38 +84,112 @@ export function DashboardClient({
     [visible],
   );
 
-  const handleUnauthorized = () => {
+  const handleUnauthorized = useCallback(() => {
     setToast({
       kind: "error",
       message: "Sesi berakhir. Kamu akan diarahkan ke halaman login.",
     });
     router.push("/login");
-  };
+  }, [router]);
 
-  const handleRetry = async () => {
-    setRefreshing(true);
-    setLoadError(null);
-    try {
-      const data = await fetchTransactionsClient(
-        user.id,
-        handleUnauthorized,
-      );
-      setTransactions(data);
-    } catch (error) {
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : "Gagal mengambil data transaksi.",
-      );
-    } finally {
-      setRefreshing(false);
-    }
+  /**
+   * Muat ulang data dashboard lewat AJAX tanpa reload halaman (FR-12).
+   * Mode `silent`: gagal refresh tidak menimpa konten yang sudah ada —
+   * cukup toast, bukan panel error.
+   *
+   * Dipanggil dari event handler / listener eksternal, BUKAN dari body
+   * effect (react-hooks/set-state-in-effect). Untuk pemuatan awal, lihat
+   * effect di bawah yang memakai promise-chain inline.
+   */
+  const transactionCountRef = useRef(transactions.length);
+  useEffect(() => {
+    transactionCountRef.current = transactions.length;
+  });
+
+  const refreshDashboard = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const silent = options?.silent ?? false;
+      setRefreshing(true);
+      if (!silent) setLoadError(null);
+      try {
+        const data = await fetchDashboardData(handleUnauthorized);
+        setTransactions(data.transactions);
+        setUserName(data.user.name);
+        setLoadError(null);
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Gagal mengambil data transaksi.";
+        if (silent && transactionCountRef.current > 0) {
+          setToast({ kind: "error", message });
+        } else {
+          setLoadError(message);
+        }
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [handleUnauthorized],
+  );
+
+  // Muat via AJAX saat pertama tampil (silent: toast saja bila gagal,
+  // konten server tetap tampil) + dengarkan pemicu refresh eksternal.
+  // setState hanya di dalam continuation promise (async), bukan sinkron
+  // di body effect.
+  useEffect(() => {
+    let active = true;
+    fetchDashboardData(handleUnauthorized).then(
+      (data) => {
+        if (!active) return;
+        setTransactions(data.transactions);
+        setUserName(data.user.name);
+      },
+      (error: unknown) => {
+        if (!active) return;
+        setToast({
+          kind: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Gagal mengambil data transaksi.",
+        });
+      },
+    );
+    const onExternalRefresh = () => {
+      void refreshDashboard({ silent: true });
+    };
+    window.addEventListener(DASHBOARD_REFRESH_EVENT, onExternalRefresh);
+    window.refreshDashboard = () => {
+      void refreshDashboard();
+    };
+    return () => {
+      active = false;
+      window.removeEventListener(DASHBOARD_REFRESH_EVENT, onExternalRefresh);
+      delete window.refreshDashboard;
+    };
+  }, [handleUnauthorized, refreshDashboard]);
+
+  const handleRetry = () => {
+    void refreshDashboard();
   };
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
+      {refreshing ? (
+        <p
+          role="status"
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground"
+        >
+          <span
+            aria-hidden="true"
+            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+          />
+          Memperbarui data dashboard…
+        </p>
+      ) : null}
       <FinancialSummary
-        userName={user.name}
+        userName={userName}
         summary={summary}
         periodLabel={periodLabel}
         onAdd={() => setFormOpen(true)}
@@ -128,6 +224,8 @@ export function DashboardClient({
           onAdd={() => setFormOpen(true)}
         />
       )}
+
+      <BudgetSummary />
 
       <AddTransactionForm
         userId={user.id}
