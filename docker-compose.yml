@@ -1,4 +1,17 @@
 services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_TRANSACTIONS_MOCK: "1"
+    container_name: moneyhist-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: docker.io/library/postgres:17-alpine
     container_name: moneyhist-db

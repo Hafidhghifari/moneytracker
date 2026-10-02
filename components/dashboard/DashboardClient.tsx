@@ -21,11 +21,11 @@ import type {
   Period,
   Transaction,
 } from "@/lib/dashboard/types";
-import type { SessionUser } from "@/lib/auth";
+import type { PublicUser } from "@/lib/auth/session";
 
 interface DashboardClientProps {
   /** User dari session (dioper Server Component, bukan hardcode). */
-  user: SessionUser;
+  user: PublicUser;
   /** Data awal hasil fetch server-side. */
   initialTransactions: Transaction[];
 }

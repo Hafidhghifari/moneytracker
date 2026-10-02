@@ -29,8 +29,6 @@ export default async function DashboardPage() {
   const initialTransactions = await getTransactionsByUserId(user.id);
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-8 sm:py-8">
-      <DashboardClient user={user} initialTransactions={initialTransactions} />
-    </main>
+    <DashboardClient user={user} initialTransactions={initialTransactions} />
   );
 }
