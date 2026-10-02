@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
-import { createTransaction, getTransactions } from "@/lib/transactions/data";
-import { transactionInputSchema } from "@/lib/transactions/schema";
+import { createTransaction, getTransactionCounts, getTransactions } from "@/lib/transactions/data";
+import { transactionFilterSchema, transactionInputSchema } from "@/lib/transactions/schema";
 import { toWireTransaction } from "@/lib/transactions/wire";
 
 /**
@@ -12,14 +12,24 @@ import { toWireTransaction } from "@/lib/transactions/wire";
  * lain. Semua respons memakai bentuk yang dikonsumsi UI (lihat `wire.ts`).
  */
 
-export async function GET() {
+export async function GET(request: Request) {
   const userId = await getCurrentUserId();
   if (userId == null) {
     return NextResponse.json({ message: "Sesi berakhir." }, { status: 401 });
   }
 
-  const rows = await getTransactions(userId, "all");
-  return NextResponse.json({ data: rows.map((row) => toWireTransaction(row, userId)) });
+  const { searchParams } = new URL(request.url);
+  const filter = transactionFilterSchema.parse(searchParams.get("filter"));
+
+  const [rows, counts] = await Promise.all([
+    getTransactions(userId, filter),
+    getTransactionCounts(userId),
+  ]);
+
+  return NextResponse.json({
+    data: rows.map((row) => toWireTransaction(row, userId)),
+    counts,
+  });
 }
 
 export async function POST(request: Request) {

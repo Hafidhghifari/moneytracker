@@ -1,3 +1,5 @@
+import type { TransactionFilter } from "./transactions/schema";
+
 export type TransactionType = "income" | "expense";
 
 export interface Transaction {
@@ -32,27 +34,63 @@ export class TransactionApiError extends Error {
 
 const API_BASE = "/api/transactions";
 
+export type TransactionCounts = Record<TransactionFilter, number>;
+
+export interface TransactionListResult {
+  transactions: Transaction[];
+  counts: TransactionCounts;
+}
+
 /**
  * Akses transaksi milik user yang login lewat AJAX (FR-13). `userId` tidak
  * pernah dikirim dari client; server menentukannya dari session (FR-20).
  * Bentuk data dari API memakai field `date`, dipetakan ke `transaction_date`
  * agar cocok dengan komponen riwayat/filter.
  */
-export async function getTransactions(): Promise<Transaction[]> {
-  const data = await request<unknown>("/");
-  if (data && typeof data === "object") {
-    const record = data as Record<string, unknown>;
-    if (Array.isArray(record.data)) {
-      return normalizeTransactions(record.data);
-    }
-    if (Array.isArray(record.transactions)) {
-      return normalizeTransactions(record.transactions);
+export async function getTransactions(
+  filter: TransactionFilter = "all",
+  signal?: AbortSignal,
+): Promise<TransactionListResult> {
+  const query = filter === "all" ? "" : `?filter=${encodeURIComponent(filter)}`;
+  const payload = await request<unknown>(`/${query}`, { signal });
+  return normalizeListResponse(payload);
+}
+
+function normalizeListResponse(payload: unknown): TransactionListResult {
+  let list: unknown[] | null = null;
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    if (Array.isArray(record.data)) list = record.data;
+    else if (Array.isArray(record.transactions)) list = record.transactions;
+  } else if (Array.isArray(payload)) {
+    list = payload;
+  }
+
+  if (!list) {
+    throw new TransactionApiError("Respons transaksi tidak sesuai format.", 0);
+  }
+
+  const transactions = normalizeTransactions(list);
+  const counts: TransactionCounts = {
+    all: transactions.length,
+    income: transactions.filter((item) => item.type === "income").length,
+    expense: transactions.filter((item) => item.type === "expense").length,
+  };
+
+  if (payload && typeof payload === "object") {
+    const raw = (payload as Record<string, unknown>).counts;
+    if (raw && typeof raw === "object") {
+      const values = raw as Record<string, unknown>;
+      for (const key of ["all", "income", "expense"] as const) {
+        if (typeof values[key] === "number" && Number.isFinite(values[key])) {
+          counts[key] = values[key] as number;
+        }
+      }
     }
   }
-  if (Array.isArray(data)) {
-    return normalizeTransactions(data);
-  }
-  throw new TransactionApiError("Respons transaksi tidak sesuai format.", 0);
+
+  return { transactions, counts };
 }
 
 export async function createTransaction(
