@@ -15,7 +15,7 @@ interface AmountKeypadProps {
 const MAX_DIGITS = 12;
 
 /**
- * Keypad angka custom untuk input nominal. Tampilan besar tabular-nums
+ * Keypad angka custom untuk input nominal. Nominal tampil tabular-nums
  * di atas; tombol 0–9, hapus satu digit, dan konfirmasi. Keyboard fisik
  * tetap bisa dipakai (angka, Backspace, Enter) via listener keydown.
  */
@@ -71,7 +71,7 @@ export function AmountKeypad({
       <output
         htmlFor={id}
         aria-live="polite"
-        className="tnum block rounded-[10px] border border-border bg-surface-muted px-4 py-3 text-center text-[28px] font-medium"
+        className="tnum block rounded-[10px] border border-border bg-surface-muted px-3 py-2 text-center text-xl font-medium"
       >
         {formatRupiah(value)}
       </output>
@@ -94,7 +94,7 @@ export function AmountKeypad({
       <div
         role="group"
         aria-label="Keypad angka nominal"
-        className="mt-3 grid grid-cols-3 gap-2"
+        className="mt-2 grid grid-cols-3 gap-1.5"
       >
         {keys.map((key) => (
           <button
@@ -102,7 +102,9 @@ export function AmountKeypad({
             type="button"
             onClick={() => appendDigit(key)}
             aria-label={`Angka ${key}`}
-            className="inline-flex h-11 items-center justify-center rounded-[10px] border border-border bg-surface text-base font-semibold transition-colors hover:bg-surface-muted"
+            className={`inline-flex h-10 items-center justify-center rounded-[10px] border border-border bg-surface text-sm font-semibold transition-colors hover:bg-surface-muted ${
+              key === "0" ? "col-span-2" : ""
+            }`}
           >
             {key}
           </button>
@@ -111,7 +113,7 @@ export function AmountKeypad({
           type="button"
           onClick={backspace}
           aria-label="Hapus satu digit"
-          className="inline-flex h-11 items-center justify-center rounded-[10px] border border-border bg-surface text-sm font-semibold transition-colors hover:bg-surface-muted"
+          className="inline-flex h-10 items-center justify-center rounded-[10px] border border-border bg-surface text-sm font-semibold transition-colors hover:bg-surface-muted"
         >
           Hapus
         </button>
@@ -119,7 +121,7 @@ export function AmountKeypad({
           type="button"
           onClick={() => onConfirm?.()}
           aria-label="Konfirmasi nominal"
-          className="col-span-2 inline-flex h-11 items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
+          className="col-span-3 inline-flex h-10 items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
         >
           Konfirmasi
         </button>
