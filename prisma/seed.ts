@@ -12,11 +12,18 @@ type SeedTransaction = {
   transactionDate: string;
 };
 
+type SeedBudget = {
+  year: number;
+  month: number;
+  amount: string;
+};
+
 const SEED_USERS: Array<{
   name: string;
   email: string;
   password: string;
   transactions: SeedTransaction[];
+  budgets: SeedBudget[];
 }> = [
   {
     name: "User A",
@@ -27,6 +34,7 @@ const SEED_USERS: Array<{
       { type: "expense", amount: "25000.50", description: "Makan siang", transactionDate: "2026-09-02" },
       { type: "expense", amount: "100000.00", description: "Buku", transactionDate: "2026-09-03" },
     ],
+    budgets: [{ year: 2026, month: 9, amount: "2000000.00" }],
   },
   {
     name: "User B",
@@ -36,6 +44,7 @@ const SEED_USERS: Array<{
       { type: "income", amount: "2000000.00", description: "Uang saku B", transactionDate: "2026-09-01" },
       { type: "expense", amount: "500000.00", description: "Sewa B", transactionDate: "2026-09-04" },
     ],
+    budgets: [{ year: 2026, month: 9, amount: "1000000.00" }],
   },
 ];
 
@@ -45,6 +54,7 @@ async function main(): Promise<void> {
   }
 
   await prisma.transaction.deleteMany();
+  await prisma.budget.deleteMany();
   await prisma.user.deleteMany();
 
   for (const seedUser of SEED_USERS) {
@@ -63,6 +73,15 @@ async function main(): Promise<void> {
         amount: transaction.amount,
         description: transaction.description,
         transactionDate: new Date(`${transaction.transactionDate}T00:00:00.000Z`),
+      })),
+    });
+
+    await prisma.budget.createMany({
+      data: seedUser.budgets.map((budget) => ({
+        userId: user.id,
+        year: budget.year,
+        month: budget.month,
+        amount: budget.amount,
       })),
     });
   }
