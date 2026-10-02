@@ -147,7 +147,7 @@ async function main(): Promise<void> {
     month: 7,
     amount: 450_000,
   });
-  const julyRows = await prisma.budget.count({
+  const julyRows = await prisma.monthlyBudget.count({
     where: { userId: userA.id, year: 2026, month: 7 },
   });
   check(
@@ -215,7 +215,7 @@ async function main(): Promise<void> {
   for (const id of createdA) {
     await deleteTransaction(userA.id, id);
   }
-  await prisma.budget.deleteMany({
+  await prisma.monthlyBudget.deleteMany({
     where: {
       OR: [
         { userId: userA.id, year: 2026, month: 8 },

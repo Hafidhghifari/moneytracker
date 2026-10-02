@@ -54,7 +54,7 @@ async function main(): Promise<void> {
   }
 
   await prisma.transaction.deleteMany();
-  await prisma.budget.deleteMany();
+  await prisma.monthlyBudget.deleteMany();
   await prisma.user.deleteMany();
 
   for (const seedUser of SEED_USERS) {
@@ -76,7 +76,7 @@ async function main(): Promise<void> {
       })),
     });
 
-    await prisma.budget.createMany({
+    await prisma.monthlyBudget.createMany({
       data: seedUser.budgets.map((budget) => ({
         userId: user.id,
         year: budget.year,

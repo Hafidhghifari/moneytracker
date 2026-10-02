@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AddTransactionForm } from "@/components/dashboard/AddTransactionForm";
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
+import { MonthlyBudgetCard } from "@/components/dashboard/MonthlyBudgetCard";
 import { PeriodNavigator } from "@/components/dashboard/PeriodNavigator";
 import {
   RecentTransactions,
@@ -100,6 +101,12 @@ export function DashboardClient({
       />
 
       <PeriodNavigator period={period} onChange={setPeriod} />
+
+      <MonthlyBudgetCard
+        key={`${period.year}-${period.month}`}
+        period={period}
+        totalExpense={summary.totalExpense}
+      />
 
       {loadError ? (
         <div

@@ -66,7 +66,7 @@ export async function getBudget(
   assertUserId(userId);
   assertPeriod(period);
 
-  const row = await prisma.budget.findUnique({
+  const row = await prisma.monthlyBudget.findUnique({
     where: {
       userId_year_month: {
         userId,
@@ -90,7 +90,7 @@ export async function setBudget(
   assertUserId(userId);
   assertPeriod(input);
 
-  const row = await prisma.budget.upsert({
+  const row = await prisma.monthlyBudget.upsert({
     where: {
       userId_year_month: {
         userId,

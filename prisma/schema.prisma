@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
   previewFeatures = ["strictUndefinedChecks"]
 }
 
@@ -14,14 +14,14 @@ enum TransactionType {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  name         String
-  email        String        @unique
-  password     String
-  preference   String?
-  sessionVersion Int          @default(0) @map("session_version")
-  transactions Transaction[]
-  budgets      Budget[]
+  id             Int             @id @default(autoincrement())
+  name           String
+  email          String          @unique
+  password       String
+  preference     String?
+  sessionVersion Int             @default(0) @map("session_version")
+  transactions   Transaction[]
+  monthlyBudgets MonthlyBudget[]
 
   @@map("users")
 }
@@ -39,7 +39,7 @@ model Transaction {
   @@map("transactions")
 }
 
-model Budget {
+model MonthlyBudget {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   year      Int
@@ -50,6 +50,5 @@ model Budget {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, year, month])
-  @@index([userId, year, month])
-  @@map("budgets")
+  @@map("monthly_budgets")
 }
