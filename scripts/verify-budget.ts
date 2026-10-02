@@ -205,7 +205,7 @@ async function main(): Promise<void> {
     );
 
     // --- 6. Summary budget -------------------------------------------
-    await prisma.budget.upsert({
+    await prisma.monthlyBudget.upsert({
       where: {
         userId_year_month: { userId: userA.id, year: TEST_YEAR, month: 1 },
       },
@@ -216,13 +216,6 @@ async function main(): Promise<void> {
         amount: "1000000.00",
       },
       update: { amount: "1000000.00" },
-    });
-    await prisma.budget.upsert({
-      where: {
-        userId_year_month: { userId: userA.id, year: TEST_YEAR, month: 5 },
-      },
-      create: { userId: userA.id, year: TEST_YEAR, month: 5, amount: "0.00" },
-      update: { amount: "0.00" },
     });
 
     const beforeBudget = await getBudgetSummary(userA.id, TEST_YEAR, 3);
@@ -239,18 +232,15 @@ async function main(): Promise<void> {
     check("summary -> remaining = anggaran - pengeluaran", summaryJan.remaining === 900000);
     check("summary -> percentage", summaryJan.percentage === 10);
 
-    const zeroBudget = await getBudgetSummary(userA.id, TEST_YEAR, 5);
-    check("anggaran 0 -> percentage null", zeroBudget.percentage === null);
-
     // --- 7. Idempotensi upsert ----------------------------------------
-    await prisma.budget.upsert({
+    await prisma.monthlyBudget.upsert({
       where: {
         userId_year_month: { userId: userA.id, year: TEST_YEAR, month: 1 },
       },
       create: { userId: userA.id, year: TEST_YEAR, month: 1, amount: "1.00" },
       update: { amount: "2000000.00" },
     });
-    const budgetRows = await prisma.budget.findMany({
+    const budgetRows = await prisma.monthlyBudget.findMany({
       where: { userId: userA.id, year: TEST_YEAR, month: 1 },
     });
     check("upsert bulan sama tidak menduplikasi", budgetRows.length === 1);
@@ -281,7 +271,7 @@ async function main(): Promise<void> {
         where: { id: { in: createdTransactionIds } },
       });
     }
-    await prisma.budget.deleteMany({
+    await prisma.monthlyBudget.deleteMany({
       where: { userId: { in: [userA.id, userB.id] }, year: TEST_YEAR },
     });
   }

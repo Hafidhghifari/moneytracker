@@ -47,10 +47,17 @@ export function SetBudgetForm({
     setSaving(true);
     setMessage(null);
     try {
-      const response = await fetch("/api/budget", {
+      const [year, monthNumber] = month.split("-").map(Number);
+      // Set Budget memakai endpoint tulis yang sudah ada di main
+      // (`PUT /api/monthly-budget`) agar satu penyimpanan dengan kartu dashboard.
+      const response = await fetch("/api/monthly-budget", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({
+          year,
+          month: monthNumber,
+          amount: parsed.data.amount,
+        }),
       });
       const payload: unknown = await response.json().catch(() => null);
       if (!response.ok) {

@@ -21,7 +21,7 @@ model User {
   preference   String?
   sessionVersion Int          @default(0) @map("session_version")
   transactions Transaction[]
-  budgets      Budget[]
+  monthlyBudgets MonthlyBudget[]
 
   @@map("users")
 }
@@ -39,7 +39,7 @@ model Transaction {
   @@map("transactions")
 }
 
-model Budget {
+model MonthlyBudget {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   year      Int
@@ -50,5 +50,5 @@ model Budget {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, year, month])
-  @@map("budgets")
+  @@map("monthly_budgets")
 }

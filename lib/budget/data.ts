@@ -26,7 +26,7 @@ export async function getBudgetSummary(
   }
 
   const [budget, totalExpense] = await Promise.all([
-    prisma.budget.findUnique({
+    prisma.monthlyBudget.findUnique({
       where: { userId_year_month: { userId, year, month } },
       select: { amount: true },
     }),
