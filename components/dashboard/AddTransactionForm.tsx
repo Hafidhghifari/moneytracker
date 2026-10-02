@@ -101,8 +101,11 @@ export function AddTransactionForm({
         if (event.target === event.currentTarget && !submitting) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
+      <div
+        className="flex max-h-[100vh] w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border bg-surface"
+        style={{ maxHeight: "100dvh" }}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-4 p-4 pb-3 sm:px-5">
           <div>
             <h2 id="add-transaction-title" className="text-lg font-semibold">
               Tambah transaksi
@@ -122,10 +125,16 @@ export function AddTransactionForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-5 flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
+            <div className="flex flex-col gap-3">
           <fieldset>
             <legend className="text-sm font-medium">Jenis transaksi</legend>
-            <div role="radiogroup" aria-label="Jenis transaksi" className="mt-2 grid grid-cols-2 gap-2">
+            <div role="radiogroup" aria-label="Jenis transaksi" className="mt-1.5 grid grid-cols-2 gap-2">
               {(
                 [
                   { value: "income", label: "Pemasukan" },
@@ -138,7 +147,7 @@ export function AddTransactionForm({
                   role="radio"
                   aria-checked={type === option.value}
                   onClick={() => setType(option.value)}
-                  className={`inline-flex h-11 items-center justify-center rounded-[10px] border text-sm font-semibold transition-colors ${
+                  className={`inline-flex h-10 items-center justify-center rounded-[10px] border text-sm font-semibold transition-colors ${
                     type === option.value
                       ? option.value === "income"
                         ? "border-income bg-surface-muted text-income"
@@ -156,10 +165,10 @@ export function AddTransactionForm({
             <label htmlFor="nominal" className="text-sm font-medium">
               Nominal
             </label>
-            <p id="nominal-help" className="mt-1 text-xs text-muted-foreground">
-              Ketuk angka pada keypad atau ketik lewat keyboard fisik.
+            <p id="nominal-help" className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+              Ketuk keypad, atau ketik langsung via keyboard.
             </p>
-            <div className="mt-2">
+            <div className="mt-1.5">
               <AmountKeypad
                 value={amount}
                 onChange={setAmount}
@@ -195,7 +204,7 @@ export function AddTransactionForm({
               aria-describedby={
                 fieldErrors.description ? "description-error" : undefined
               }
-              className="mt-2 flex h-11 w-full items-center rounded-[10px] border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground"
+              className="mt-1.5 flex h-10 w-full items-center rounded-[10px] border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground"
             />
             {fieldErrors.description && (
               <p
@@ -219,7 +228,7 @@ export function AddTransactionForm({
               onChange={(event) => setDate(event.target.value)}
               aria-invalid={Boolean(fieldErrors.date)}
               aria-describedby={fieldErrors.date ? "date-error" : undefined}
-              className="mt-2 flex h-11 w-full items-center rounded-[10px] border border-border bg-surface px-4 text-sm"
+              className="mt-1.5 flex h-10 w-full items-center rounded-[10px] border border-border bg-surface px-4 text-sm"
             />
             {fieldErrors.date && (
               <p
@@ -231,15 +240,18 @@ export function AddTransactionForm({
               </p>
             )}
           </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            aria-disabled={submitting}
-            className="inline-flex h-11 items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Menyimpan…" : "Simpan transaksi"}
-          </button>
+            </div>
+          </div>
+          <div className="shrink-0 border-t border-border bg-surface p-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-5">
+            <button
+              type="submit"
+              disabled={submitting}
+              aria-disabled={submitting}
+              className="inline-flex h-11 w-full items-center justify-center rounded-[10px] bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? "Menyimpan…" : "Simpan transaksi"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

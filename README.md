@@ -19,10 +19,13 @@ Prasyarat: Node.js 22+, pnpm, dan Docker (atau podman dengan `podman-compose`).
 
 Buka http://localhost:3000.
 
+<<<<<<< HEAD
+=======
 PostgreSQL Moneyhist dipublikasikan pada port host `55432` agar tidak bertabrakan dengan database Docker lain. URL koneksi Prisma berada di `.env`.
 
 Pendaftaran dan login yang berhasil mengarahkan pengguna ke `/dashboard`. Halaman dashboard dan pengaturan membutuhkan session aktif. Preferensi filter transaksi dapat diubah pada `/settings` dan disimpan per akun di database.
 
+>>>>>>> 3363d1f2899e2e7f56b87ee9ab105e73caf02a04
 ### Perintah database
 
 | Perintah | Fungsi |
