@@ -1,3 +1,5 @@
+import type { TransactionFilter } from "./transactions/schema";
+
 export type TransactionType = "income" | "expense";
 
 export interface Transaction {
@@ -33,9 +35,9 @@ export class TransactionApiError extends Error {
 const API_BASE = "/api/transactions";
 
 /**
- * Demo mode: hingga backend `/api/transactions` tersedia, UI memakai data
- * dummy agar fitur riwayat/filter/hapus/tambah bisa dipakai. Matikan dengan
- * env `NEXT_PUBLIC_TRANSACTIONS_MOCK=0`.
+ * Demo mode masih AKTIF secara default sampai Task 7 (menunggu backend
+ * POST/DELETE milik Anggota 2). Selama pengembangan jalankan dev server
+ * dengan `NEXT_PUBLIC_TRANSACTIONS_MOCK=0` untuk memakai DB nyata.
  */
 const DEMO_MODE = process.env.NEXT_PUBLIC_TRANSACTIONS_MOCK !== "0";
 
@@ -45,25 +47,66 @@ export function __resetDemo() {
   demoStore = seedDemoData();
 }
 
-export async function getTransactions(): Promise<Transaction[]> {
+export type TransactionCounts = Record<TransactionFilter, number>;
+
+export interface TransactionListResult {
+  transactions: Transaction[];
+  counts: TransactionCounts;
+}
+
+export async function getTransactions(
+  filter: TransactionFilter = "all",
+  signal?: AbortSignal,
+): Promise<TransactionListResult> {
   if (DEMO_MODE) {
     await delay(350);
-    return [...demoStore];
+    const all = [...demoStore];
+    const byType = (type: TransactionType) =>
+      all.filter((item) => item.type === type).length;
+    return {
+      transactions:
+        filter === "all" ? all : all.filter((item) => item.type === filter),
+      counts: {
+        all: all.length,
+        income: byType("income"),
+        expense: byType("expense"),
+      },
+    };
   }
-  const data = await request<unknown>("/");
-  if (Array.isArray(data)) {
-    return normalizeTransactions(data);
+
+  const query = filter === "all" ? "" : `?filter=${encodeURIComponent(filter)}`;
+  const payload = await request<unknown>(`/${query}`, { signal });
+  return normalizeListResponse(payload);
+}
+
+function normalizeListResponse(payload: unknown): TransactionListResult {
+  const record =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : {};
+  const list = Array.isArray(record.data) ? record.data : null;
+
+  if (!list) {
+    throw new TransactionApiError("Respons transaksi tidak sesuai format.", 0);
   }
-  if (data && typeof data === "object") {
-    const record = data as Record<string, unknown>;
-    if (Array.isArray(record.transactions)) {
-      return normalizeTransactions(record.transactions);
+
+  const transactions = normalizeTransactions(list);
+  const counts: TransactionCounts = {
+    all: transactions.length,
+    income: transactions.filter((item) => item.type === "income").length,
+    expense: transactions.filter((item) => item.type === "expense").length,
+  };
+
+  if (record.counts && typeof record.counts === "object") {
+    const raw = record.counts as Record<string, unknown>;
+    for (const key of ["all", "income", "expense"] as const) {
+      if (typeof raw[key] === "number" && Number.isFinite(raw[key])) {
+        counts[key] = raw[key] as number;
+      }
     }
-    if (Array.isArray(record.data)) {
-      return normalizeTransactions(record.data);
-    }
   }
-  throw new TransactionApiError("Respons transaksi tidak sesuai format.", 0);
+
+  return { transactions, counts };
 }
 
 export async function createTransaction(
@@ -159,7 +202,9 @@ function fallbackMessage(status: number): string {
 
 function normalizeTransactions(list: unknown[]): Transaction[] {
   return list.map((item) => {
-    const raw = (item ?? {}) as Partial<Transaction>;
+    const raw = (item ?? {}) as Partial<Transaction> & {
+      transactionDate?: unknown;
+    };
     const type: TransactionType =
       raw.type === "expense" ? "expense" : "income";
     return {
@@ -167,7 +212,9 @@ function normalizeTransactions(list: unknown[]): Transaction[] {
       type,
       amount: Number(raw.amount ?? 0),
       description: String(raw.description ?? ""),
-      transaction_date: String(raw.transaction_date ?? ""),
+      transaction_date: String(
+        raw.transaction_date ?? raw.transactionDate ?? "",
+      ),
     };
   });
 }

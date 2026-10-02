@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, Inbox, Plus, RotateCw, Trash2 } from "lucide-react";
 import { Button, ButtonLink, IconButton } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -8,20 +8,22 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { TransactionTypeIcon, TypePill } from "@/components/ui/transaction-type";
 import { TransactionFilterControl } from "./transaction-filter";
-import type { TransactionFilter } from "./transaction-filter";
+import type { TransactionFilter } from "@/lib/transactions/schema";
 import {
   deleteTransaction,
   getTransactions,
   messageOfError,
   TRANSACTION_TYPE_LABEL,
 } from "@/lib/transactions";
-import type { Transaction } from "@/lib/transactions";
+import type { Transaction, TransactionCounts } from "@/lib/transactions";
 import { formatCurrency, formatDate, sortableDate } from "@/lib/format";
 
 type LoadState =
   | { status: "loading" }
   | { status: "ready" }
   | { status: "error"; message: string };
+
+const EMPTY_COUNTS: TransactionCounts = { all: 0, income: 0, expense: 0 };
 
 function sortTransactions(list: Transaction[]): Transaction[] {
   return [...list].sort(
@@ -35,49 +37,38 @@ export function TransactionHistory() {
   const toast = useToast();
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [counts, setCounts] = useState<TransactionCounts>(EMPTY_COUNTS);
   const [filter, setFilter] = useState<TransactionFilter>("all");
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  function applySuccess(list: Transaction[]) {
-    setTransactions(sortTransactions(list));
-    setLoadState({ status: "ready" });
-  }
-
-  function applyError(error: unknown) {
-    setLoadState({ status: "error", message: messageOfError(error) });
-  }
+  const load = useCallback(
+    async (nextFilter: TransactionFilter, signal?: AbortSignal) => {
+      setLoadState({ status: "loading" });
+      try {
+        const result = await getTransactions(nextFilter, signal);
+        setTransactions(sortTransactions(result.transactions));
+        setCounts(result.counts);
+        setLoadState({ status: "ready" });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setLoadState({ status: "error", message: messageOfError(error) });
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    let cancelled = false;
-    getTransactions()
-      .then((list) => {
-        if (cancelled) return;
-        applySuccess(list);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        applyError(error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const controller = new AbortController();
+    // Skeleton sengaja ditampilkan sinkron saat filter berubah.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load(filter, controller.signal);
+    return () => controller.abort();
+  }, [filter, load]);
 
   function retry() {
-    setLoadState({ status: "loading" });
-    getTransactions()
-      .then((list) => applySuccess(list))
-      .catch((error) => applyError(error));
+    void load(filter);
   }
-
-  const filtered = useMemo(
-    () =>
-      filter === "all"
-        ? transactions
-        : transactions.filter((item) => item.type === filter),
-    [transactions, filter]
-  );
 
   async function handleConfirmDelete() {
     if (!pendingDelete) return;
@@ -85,9 +76,9 @@ export function TransactionHistory() {
     setDeleting(true);
     try {
       await deleteTransaction(target.id);
-      setTransactions((list) => list.filter((item) => item.id !== target.id));
       setPendingDelete(null);
       toast.success("Transaksi berhasil dihapus.");
+      await load(filter);
     } catch (error) {
       setPendingDelete(null);
       toast.error(`Transaksi gagal dihapus. ${messageOfError(error)}`);
@@ -124,12 +115,12 @@ export function TransactionHistory() {
         <TransactionFilterControl
           value={filter}
           onChange={setFilter}
-          transactions={transactions}
+          counts={counts}
         />
         <p className="text-sm text-muted-foreground">
           {loadState.status === "ready" ? (
             <span className="tabular-nums">
-              Menampilkan {filtered.length} dari {transactions.length} transaksi
+              Menampilkan {counts[filter]} dari {counts.all} transaksi
             </span>
           ) : (
             <span className="tabular-nums">Menyiapkan riwayat…</span>
@@ -144,19 +135,17 @@ export function TransactionHistory() {
           <ErrorState message={loadState.message} onRetry={retry} />
         ) : null}
 
-        {loadState.status === "ready" && transactions.length === 0 ? (
-          <EmptyState />
-        ) : null}
+        {loadState.status === "ready" && counts.all === 0 ? <EmptyState /> : null}
 
         {loadState.status === "ready" &&
-        transactions.length > 0 &&
-        filtered.length === 0 ? (
+        counts.all > 0 &&
+        transactions.length === 0 ? (
           <EmptyFilteredState filterLabel={filterLabel} />
         ) : null}
 
-        {loadState.status === "ready" && filtered.length > 0 ? (
+        {loadState.status === "ready" && transactions.length > 0 ? (
           <div className="divide-y divide-border">
-            {filtered.map((transaction) => (
+            {transactions.map((transaction) => (
               <TransactionRow
                 key={transaction.id}
                 transaction={transaction}

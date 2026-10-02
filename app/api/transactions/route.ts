@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/auth";
+import {
+  getTransactionCounts,
+  getTransactions,
+} from "@/lib/transactions/data";
+import { transactionFilterSchema } from "@/lib/transactions/schema";
 import { buildMockTransactions } from "@/lib/dashboard/mock";
 import type {
   Transaction,
@@ -46,19 +52,25 @@ function isValidDate(value: unknown): value is string {
   );
 }
 
-/** GET /api/transactions?user_id=<id> -> 200 { data: Transaction[] } */
+/** GET /api/transactions?filter=all|income|expense -> 200 { data, counts } */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("user_id");
+  const userId = await getCurrentUserId();
   if (!userId) {
     return NextResponse.json(
-      { message: "Parameter user_id wajib diisi." },
-      { status: 400 },
+      { message: "Sesi berakhir, silakan masuk kembali." },
+      { status: 401 },
     );
   }
-  // TODO (Anggota 2): ambil dari database + cek session (FR-05).
-  const data = storeFor(userId).filter((trx) => trx.user_id === userId);
-  return NextResponse.json({ data });
+
+  const { searchParams } = new URL(request.url);
+  const filter = transactionFilterSchema.parse(searchParams.get("filter"));
+
+  const [data, counts] = await Promise.all([
+    getTransactions(userId, filter),
+    getTransactionCounts(userId),
+  ]);
+
+  return NextResponse.json({ data, counts });
 }
 
 /** POST /api/transactions -> 201 { data: Transaction } */
