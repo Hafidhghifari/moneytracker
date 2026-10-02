@@ -13,6 +13,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:verify": "tsx scripts/verify-transactions.ts",
+    "db:verify:budget": "tsx scripts/verify-budget.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {
