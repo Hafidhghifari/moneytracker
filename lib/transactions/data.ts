@@ -75,6 +75,65 @@ export async function getTransactions(
   return rows.map(toDTO);
 }
 
+export type TransactionCounts = {
+  all: number;
+  income: number;
+  expense: number;
+};
+
+/** Jumlah transaksi per jenis untuk user (badge filter AJAX). */
+export async function getTransactionCounts(
+  userId: number,
+): Promise<TransactionCounts> {
+  assertUserId(userId);
+
+  const grouped = await prisma.transaction.groupBy({
+    by: ["type"],
+    where: { userId },
+    _count: { _all: true },
+  });
+
+  const counts: TransactionCounts = { all: 0, income: 0, expense: 0 };
+
+  for (const group of grouped) {
+    const key = TRANSACTION_TYPE_BY_PRISMA[group.type];
+    counts[key] = group._count._all;
+    counts.all += group._count._all;
+  }
+
+  return counts;
+}
+
+/**
+ * Total pengeluaran user pada satu bulan kalender (UTC).
+ * Batas: `>= awal bulan` dan `< awal bulan berikutnya`.
+ */
+export async function getExpenseTotalForMonth(
+  userId: number,
+  year: number,
+  month: number,
+): Promise<number> {
+  assertUserId(userId);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    throw new Error("Bulan tidak valid");
+  }
+
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 1));
+
+  const result = await prisma.transaction.aggregate({
+    where: {
+      userId,
+      type: "expense",
+      transactionDate: { gte: start, lt: end },
+    },
+    _sum: { amount: true },
+  });
+
+  return Number(result._sum.amount?.toString() ?? "0");
+}
+
 export async function getRecentTransactions(
   userId: number,
   limit = 5,
