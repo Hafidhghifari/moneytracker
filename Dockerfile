@@ -9,8 +9,6 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG NEXT_PUBLIC_TRANSACTIONS_MOCK=1
-ENV NEXT_PUBLIC_TRANSACTIONS_MOCK=$NEXT_PUBLIC_TRANSACTIONS_MOCK
 RUN pnpm build
 
 FROM base AS runner

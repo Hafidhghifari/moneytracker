@@ -90,11 +90,11 @@ async function main(): Promise<void> {
 
   // --- 2. Pembacaan transaksi ---------------------------------------
   const userA = await prisma.user.findUnique({
-    where: { email: "user.a@example.com" },
+    where: { email: "sza@mh.com" },
     select: { id: true },
   });
   const userB = await prisma.user.findUnique({
-    where: { email: "user.b@example.com" },
+    where: { email: "abc@mh.com" },
     select: { id: true },
   });
   check("user A hasil seed ditemukan", userA !== null);
@@ -105,11 +105,15 @@ async function main(): Promise<void> {
     return;
   }
 
-  const currentUserId = await getCurrentUserId();
+  let currentUserIdOutsideRequestRejected = false;
+  try {
+    await getCurrentUserId();
+  } catch {
+    currentUserIdOutsideRequestRejected = true;
+  }
   check(
-    "getCurrentUserId() mengembalikan id user A (stub dev)",
-    currentUserId === userA.id,
-    String(currentUserId),
+    "getCurrentUserId() butuh request scope (session asli)",
+    currentUserIdOutsideRequestRejected,
   );
 
   const allA = await getTransactions(userA.id, "all");

@@ -1,80 +1,43 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth";
-import {
-  getTransactionCounts,
-  getTransactions,
-} from "@/lib/transactions/data";
-import { transactionFilterSchema } from "@/lib/transactions/schema";
-import { buildMockTransactions } from "@/lib/dashboard/mock";
-import type {
-  Transaction,
-  TransactionType,
-} from "@/lib/dashboard/types";
+import { createTransaction, getTransactionCounts, getTransactions } from "@/lib/transactions/data";
+import { transactionFilterSchema, transactionInputSchema } from "@/lib/transactions/schema";
+import { toWireTransaction } from "@/lib/transactions/wire";
 
 /**
- * ------------------------------------------------------------------
- * STUB SEMENTARA milik dashboard (Anggota 3).
+ * Endpoint transaksi milik user yang sedang login (FR-07, FR-13, FR-20).
  *
- * TODO (Anggota 2 — database & backend transaksi): ganti seluruh isi
- * route ini dengan implementasi asli:
- * - GET: query tabel Transactions WHERE user_id = ? milik user dari
- *   session (BUKAN dari query param semata), kembalikan
- *   `200 { data: Transaction[] }`. Tolak akses ke user_id lain (FR-05).
- * - POST: validasi (FR-07), paksa `user_id` dari session, INSERT ke
- *   database, kembalikan `201 { data: Transaction }`.
- * - Balikan 401 bila session tidak valid (FR-05 ayat 5).
- *
- * Selama stub ini dipakai, data contoh ditempelkan ke `user_id` dari
- * session/query sehingga tidak ada user hardcode di komponen.
- * POST menyimpan ke memori proses dev saja (hilang saat restart) —
- * cukup untuk demo update-otomatis tanpa reload.
- * ------------------------------------------------------------------
+ * `userId` selalu diambil dari session di server — bukan dari body/query —
+ * sehingga pengguna tidak dapat membaca atau menulis transaksi milik akun
+ * lain. Semua respons memakai bentuk yang dikonsumsi UI (lihat `wire.ts`).
  */
 
-let memoryStore: Transaction[] | null = null;
-
-function storeFor(userId: string): Transaction[] {
-  if (!memoryStore || !memoryStore.every((trx) => trx.user_id === userId)) {
-    memoryStore = buildMockTransactions(userId);
-  }
-  return memoryStore;
-}
-
-function isValidType(value: unknown): value is TransactionType {
-  return value === "income" || value === "expense";
-}
-
-function isValidDate(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    !Number.isNaN(new Date(`${value}T00:00:00`).getTime())
-  );
-}
-
-/** GET /api/transactions?filter=all|income|expense -> 200 { data, counts } */
 export async function GET(request: Request) {
   const userId = await getCurrentUserId();
-  if (!userId) {
-    return NextResponse.json(
-      { message: "Sesi berakhir, silakan masuk kembali." },
-      { status: 401 },
-    );
+  if (userId == null) {
+    return NextResponse.json({ message: "Sesi berakhir." }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
   const filter = transactionFilterSchema.parse(searchParams.get("filter"));
 
-  const [data, counts] = await Promise.all([
+  const [rows, counts] = await Promise.all([
     getTransactions(userId, filter),
     getTransactionCounts(userId),
   ]);
 
-  return NextResponse.json({ data, counts });
+  return NextResponse.json({
+    data: rows.map((row) => toWireTransaction(row, userId)),
+    counts,
+  });
 }
 
-/** POST /api/transactions -> 201 { data: Transaction } */
 export async function POST(request: Request) {
+  const userId = await getCurrentUserId();
+  if (userId == null) {
+    return NextResponse.json({ message: "Sesi berakhir." }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;
@@ -85,50 +48,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const userId = body.user_id;
-  if (typeof userId !== "string" || !userId) {
-    return NextResponse.json(
-      { message: "user_id wajib diisi dari session." },
-      { status: 400 },
-    );
-  }
-  if (!isValidType(body.type)) {
-    return NextResponse.json(
-      { message: "Jenis transaksi harus Pemasukan atau Pengeluaran." },
-      { status: 400 },
-    );
-  }
-  const amount = Number(body.amount);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return NextResponse.json(
-      { message: "Nominal harus angka lebih dari 0." },
-      { status: 400 },
-    );
-  }
-  const description =
-    typeof body.description === "string" ? body.description.trim() : "";
-  if (!description) {
-    return NextResponse.json(
-      { message: "Deskripsi wajib diisi." },
-      { status: 400 },
-    );
-  }
-  if (!isValidDate(body.date)) {
-    return NextResponse.json(
-      { message: "Tanggal tidak valid." },
-      { status: 400 },
-    );
+  // `date` dan `transaction_date` diterima demi kompatibilitas dua UI layer;
+  // keduanya dipetakan ke satu skema validasi.
+  const parsed = transactionInputSchema.safeParse({
+    type: body.type,
+    amount: typeof body.amount === "number" ? String(body.amount) : body.amount,
+    description: body.description,
+    transactionDate: body.date ?? body.transaction_date,
+  });
+
+  if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0]?.message ?? "Data transaksi tidak valid.";
+    return NextResponse.json({ message: firstIssue }, { status: 400 });
   }
 
-  // TODO (Anggota 2): INSERT ke database dengan user_id dari session.
-  const created: Transaction = {
-    id: `trx-${Date.now()}`,
-    user_id: userId,
-    type: body.type,
-    amount: Math.floor(amount),
-    description,
-    date: body.date,
-  };
-  storeFor(userId).unshift(created);
-  return NextResponse.json({ data: created }, { status: 201 });
+  try {
+    const created = await createTransaction(userId, parsed.data);
+    return NextResponse.json(
+      { data: toWireTransaction(created, userId) },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("Gagal menyimpan transaksi:", error);
+    return NextResponse.json(
+      { message: "Gagal menyimpan transaksi. Coba lagi." },
+      { status: 500 },
+    );
+  }
 }
