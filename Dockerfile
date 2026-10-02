@@ -11,6 +11,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG NEXT_PUBLIC_TRANSACTIONS_MOCK=1
 ENV NEXT_PUBLIC_TRANSACTIONS_MOCK=$NEXT_PUBLIC_TRANSACTIONS_MOCK
+# Generated client is gitignored, so generate it here. Generate doesn't
+# connect to the DB, a dummy URL is enough for config resolution.
+RUN DATABASE_URL=postgresql://moneyhist:moneyhist@localhost:55432/moneyhist pnpm db:generate
 RUN pnpm build
 
 FROM base AS runner
